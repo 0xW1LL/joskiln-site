@@ -21,8 +21,11 @@ window.JK_CONFIG = {
      If the iframe embed refuses to render (frame-blocking), blank
      baluuEmbedUrl — the phone/WhatsApp fallback card returns and
      every Book button still deep-links to the booking page.       */
-  baluuEmbedUrl:   "https://jos-kiln.live.baluu.co.uk/events",
-  baluuBookingUrl: "https://jos-kiln.live.baluu.co.uk/events",
+  /* Paste back the moment Jo's first classes are published in Baluu —
+     until then What's On shows the friendly fallback card instead of an
+     empty calendar. URL: https://jos-kiln.live.baluu.co.uk/events */
+  baluuEmbedUrl:   "",
+  baluuBookingUrl: "",  /* same URL as above — restore with the embed */
 
   /* --- Gift vouchers ------------------------------------------ */
   /* Enable vouchers in Baluu, then paste the URL from
