@@ -288,7 +288,7 @@ html[data-season] .hero__badge.has-strap { display: inline-block; }
 @media (max-width: 900px) { .pgrid { grid-template-columns: 1fr 1fr; } }
 @media (max-width: 560px) { .pgrid { grid-template-columns: 1fr; } }
 .pgrid figure { border-radius: 14px; overflow: hidden; background: var(--card); box-shadow: var(--shadow); }
-.pgrid img { width: 100%; height: 230px; object-fit: cover; }
+.pgrid img { width: 100%; height: 264px; object-fit: cover; }
 .pgrid figcaption { padding: 10px 14px; font-size: .9rem; color: var(--ink-soft); }
 
 /* auto-note (labels a section fed by Instagram/Baluu) */
