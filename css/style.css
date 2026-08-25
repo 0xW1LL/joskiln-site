@@ -114,17 +114,17 @@ a:focus-visible, button:focus-visible {
   border-bottom: 1px solid var(--line);
 }
 .site-header .wrap {
-  display: flex; align-items: center; gap: 24px; min-height: 80px;
+  display: flex; align-items: center; gap: 24px; min-height: 88px;
 }
 .site-header .btn { min-height: 44px; padding: 10px 22px; }
 .brand {
-  display: flex; align-items: center; gap: 12px;
+  display: flex; align-items: center; gap: 14px;
   font-family: 'Josefin Sans', var(--sans); font-weight: 300; letter-spacing: .01em;
-  font-size: 1.8rem; color: var(--ink);
+  font-size: 2.05rem; color: var(--ink);
   text-decoration: none; margin-right: auto; white-space: nowrap;
   padding-top: 2px; /* Josefin sits high on its line */
 }
-.brand svg { width: 48px; height: 48px; flex: none; }
+.brand svg { width: 56px; height: 56px; flex: none; }
 .nav-desktop { display: flex; gap: 26px; align-items: center; }
 .nav-desktop a {
   position: relative; white-space: nowrap;
@@ -179,7 +179,7 @@ a:focus-visible, button:focus-visible {
 .mobile-bar .btn { flex: 1; min-height: 52px; }
 
 /* nav collapses to the menu button well before it can crowd the header */
-@media (max-width: 1020px) {
+@media (max-width: 1080px) {
   .nav-desktop { display: none; }
   .icon-btn { display: inline-flex; }
 }
@@ -188,6 +188,15 @@ a:focus-visible, button:focus-visible {
   .site-header .btn { display: none; }
   .mobile-bar { display: flex; }
   body { padding-bottom: 84px; }   /* room for the bar */
+}
+
+/* brand strapline, from Jo's logo lockup */
+.brand-strap {
+  font-family: 'Oswald', var(--sans); font-weight: 500;
+  text-transform: uppercase; letter-spacing: .22em;
+  text-align: center; color: var(--ink-soft);
+  font-size: clamp(.9rem, 1.8vw, 1.1rem);
+  margin: 36px 20px 0; padding: 0 10px;
 }
 
 /* ---------- hero ---------- */
@@ -464,7 +473,7 @@ html[data-season] .hero__badge.has-strap { display: inline-block; }
 
 /* ---------- logo flame: gentle flicker always, burns on hover ---------- */
 .flame {
-  transform-origin: 24px 37px;
+  transform-origin: 24px 39px;
   animation: flameFlick 2.4s ease-in-out infinite;
   transition: stroke .25s ease;
 }
