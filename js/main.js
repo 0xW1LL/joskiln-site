@@ -13,10 +13,10 @@
   var season = (m >= 3 && m <= 5) ? "spring" : (m >= 6 && m <= 8) ? "summer" : (m >= 9 && m <= 11) ? "autumn" : "winter";
   document.documentElement.setAttribute("data-season", season);
   var straps = {
-    spring: "Spring term. New dates just fired.",
-    summer: "Summer at the kiln. Drop-in tasters all season.",
-    autumn: "Autumn term. New dates just fired.",
-    winter: "Winter at the kiln. Gifts made by hand."
+    spring: "Spring at the kiln. Seasonal events for adults.",
+    summer: "Summer at the kiln. Seasonal events for adults.",
+    autumn: "Autumn at the kiln. Seasonal events for adults.",
+    winter: "Winter at the kiln. Seasonal events for adults."
   };
   document.querySelectorAll("[data-season-strap]").forEach(function (el) {
     el.textContent = straps[season];
