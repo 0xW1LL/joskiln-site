@@ -114,15 +114,17 @@ a:focus-visible, button:focus-visible {
   border-bottom: 1px solid var(--line);
 }
 .site-header .wrap {
-  display: flex; align-items: center; gap: 24px; min-height: 72px;
+  display: flex; align-items: center; gap: 24px; min-height: 80px;
 }
 .site-header .btn { min-height: 44px; padding: 10px 22px; }
 .brand {
-  display: flex; align-items: center; gap: 10px;
-  font-family: var(--serif); font-size: 1.35rem; color: var(--ink);
+  display: flex; align-items: center; gap: 12px;
+  font-family: 'Josefin Sans', var(--sans); font-weight: 300; letter-spacing: .01em;
+  font-size: 1.8rem; color: var(--ink);
   text-decoration: none; margin-right: auto; white-space: nowrap;
+  padding-top: 2px; /* Josefin sits high on its line */
 }
-.brand svg { width: 34px; height: 34px; flex: none; }
+.brand svg { width: 48px; height: 48px; flex: none; }
 .nav-desktop { display: flex; gap: 26px; align-items: center; }
 .nav-desktop a {
   position: relative; white-space: nowrap;
@@ -348,9 +350,16 @@ html[data-season] .hero__badge.has-strap { display: inline-block; }
 }
 
 /* ---------- practical strip ---------- */
-.practical { display: grid; grid-template-columns: repeat(4, 1fr); gap: 18px; }
-@media (max-width: 860px) { .practical { grid-template-columns: 1fr 1fr; } }
+.practical { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 18px; }
 @media (max-width: 480px) { .practical { grid-template-columns: 1fr; } }
+
+/* home: live-calendar CTA card */
+.booking-cta {
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 24px; padding: 28px 32px; flex-wrap: wrap;
+}
+.booking-cta h3 { font-size: 1.45rem; margin-bottom: 6px; }
+.booking-cta p { margin: 0; color: var(--ink-soft); max-width: 600px; }
 .practical div { display: flex; gap: 12px; align-items: flex-start; font-size: .95rem; color: var(--ink-soft); }
 .practical svg { flex: none; width: 26px; height: 26px; color: var(--accent); margin-top: 2px; }
 
@@ -453,10 +462,11 @@ html[data-season] .hero__badge.has-strap { display: inline-block; }
 }
 .skip-link:focus { left: 8px; }
 
-/* ---------- logo flame flicker ---------- */
+/* ---------- logo flame: gentle flicker always, burns on hover ---------- */
 .flame {
   transform-origin: 24px 37px;
   animation: flameFlick 2.4s ease-in-out infinite;
+  transition: stroke .25s ease;
 }
 @keyframes flameFlick {
   0%, 100% { transform: scale(1) rotate(0); }
@@ -464,4 +474,16 @@ html[data-season] .hero__badge.has-strap { display: inline-block; }
   50%      { transform: scaleY(.95); }
   75%      { transform: scaleY(1.05) scaleX(.98) rotate(2deg); }
 }
-@media (prefers-reduced-motion: reduce) { .flame { animation: none; } }
+.brand:hover .flame, .brand:focus-visible .flame {
+  stroke: var(--accent);
+  animation: flameBurn .65s ease-in-out infinite;
+}
+@keyframes flameBurn {
+  0%, 100% { transform: scale(1) rotate(0); }
+  30%      { transform: scaleY(1.18) scaleX(.93) rotate(-3.5deg); }
+  55%      { transform: scaleY(.9) scaleX(1.06); }
+  80%      { transform: scaleY(1.14) scaleX(.95) rotate(3.5deg); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .flame, .brand:hover .flame { animation: none; }
+}
