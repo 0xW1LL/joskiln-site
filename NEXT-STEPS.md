@@ -5,23 +5,22 @@ can happen after it's live — each service you wire up is a one-line change in 
 and the site behaves gracefully until then (phone/WhatsApp booking fallback, hand-picked
 photo grids, mailto contact forms).
 
-## 1. Deploy now (you, ~30 minutes)
+## 1. Deploy — DONE (25 Aug 2026)
 
-- [ ] Open this folder in Cursor, push to a GitHub repo, import into Vercel. No build step,
-      no framework — it deploys as-is (`vercel.json` already enables clean URLs).
-- [ ] Check the live preview URL on your phone and desktop. Fonts (Young Serif / Nunito Sans)
-      and the Google Map will load properly once it's on the real internet.
+- [x] Live at **https://www.joskiln.co.uk** (apex joskiln.co.uk 308-redirects to www, SSL
+      issued by Vercel). Code lives at github.com/0xW1LL/joskiln-site (main branch);
+      Vercel project `joskiln-site` redeploys automatically on every commit.
+- [ ] Check the live site on your phone + Jo's phone (fonts, map, tap targets).
 
-## 2. Domain + email — MOSTLY DONE (25 Aug 2026)
+## 2. Domain + email — DONE (25 Aug 2026)
 
 - [x] Email is LIVE: hello@joskiln.co.uk on Google Workspace. Gmail activated, MX at IONOS
       points to smtp.google.com (priority 1), Google SPF TXT added, IONOS mail records
       disabled, Workspace user renamed to Jo Rogers, IONOS contact details confirmed.
 - [x] `email` in js/config.js updated to hello@joskiln.co.uk.
-- [ ] When deploying: add joskiln.co.uk in the Vercel dashboard, then in IONOS DNS
-      (Domains & SSL → joskiln.co.uk → DNS) edit the two "Default Site" rows:
-      A record `@` → 76.76.21.21 and add CNAME `www` → cname.vercel-dns.com.
-      Leave the MX and TXT records alone — they are the working email.
+- [x] Domain wired: IONOS A `@` → 216.150.1.1 and CNAME `www` →
+      b4d0d483855d9740.vercel-dns-016.com; old parking records (A/AAAA/mutex) disabled.
+      MX + SPF untouched — email unaffected.
 - [ ] Optional 5-min deliverability win: Admin console → Apps → Gmail → Authenticate
       email → generate DKIM key → add its TXT record in IONOS → Start authentication.
 - [ ] Still worth checking in IONOS: what plan Jo pays for — cancel any website-builder
