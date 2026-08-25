@@ -201,10 +201,10 @@
         }).then(function (r) {
           if (r.ok) {
             form.reset();
-            if (status) { status.textContent = "Thank you — your message is on its way to Jo. She replies within a day or two."; status.dataset.state = "ok"; }
+            if (status) { status.textContent = "Thank you. Your message is on its way to Jo. She replies within a day or two."; status.dataset.state = "ok"; }
           } else { throw new Error("bad status"); }
         }).catch(function () {
-          if (status) { status.textContent = "That didn't send — please ring or WhatsApp Jo instead."; status.dataset.state = "err"; }
+          if (status) { status.textContent = "That didn't send. Please WhatsApp Jo instead."; status.dataset.state = "err"; }
         }).finally(function () { if (btn) btn.disabled = false; });
       } else {
         /* no endpoint yet: open the visitor's email app pre-filled */
