@@ -232,6 +232,25 @@
     el.setAttribute("href", "https://www.google.com/maps/search/?api=1&query=" + encodeURIComponent(C.mapQuery || ""));
   });
 
+  /* ---------- crossfading gallery tiles ---------- */
+  document.querySelectorAll(".tile-fade").forEach(function (tf) {
+    var slides = tf.querySelectorAll("img");
+    if (slides.length < 2 || reduced) return;
+    var idx = 0;
+    setInterval(function () {
+      slides[idx].classList.remove("is-active");
+      idx = (idx + 1) % slides.length;
+      slides[idx].classList.add("is-active");
+    }, 4500);
+  });
+
+  /* ---------- looping gallery video: stop for reduced-motion visitors ---------- */
+  if (reduced) {
+    document.querySelectorAll("video[autoplay]").forEach(function (v) {
+      v.removeAttribute("autoplay"); v.pause(); v.setAttribute("controls", "");
+    });
+  }
+
   /* ---------- reveal on scroll ---------- */
   if (!reduced && "IntersectionObserver" in window) {
     var io = new IntersectionObserver(function (entries) {
