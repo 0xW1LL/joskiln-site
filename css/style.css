@@ -114,17 +114,17 @@ a:focus-visible, button:focus-visible {
   border-bottom: 1px solid var(--line);
 }
 .site-header .wrap {
-  display: flex; align-items: center; gap: 24px; min-height: 88px;
+  display: flex; align-items: center; gap: 24px; min-height: 96px;
 }
 .site-header .btn { min-height: 44px; padding: 10px 22px; }
 .brand {
-  display: flex; align-items: center; gap: 14px;
-  font-family: 'Josefin Sans', var(--sans); font-weight: 300; letter-spacing: .01em;
-  font-size: 2.05rem; color: var(--ink);
+  display: flex; align-items: center; gap: 16px;
+  font-family: 'Josefin Sans', var(--sans); font-weight: 300; letter-spacing: .045em;
+  font-size: 2.35rem; color: var(--ink);
   text-decoration: none; margin-right: auto; white-space: nowrap;
   padding-top: 2px; /* Josefin sits high on its line */
 }
-.brand svg { width: 56px; height: 56px; flex: none; }
+.brand svg { width: 64px; height: 64px; flex: none; }
 .nav-desktop { display: flex; gap: 26px; align-items: center; }
 .nav-desktop a {
   position: relative; white-space: nowrap;
@@ -179,7 +179,7 @@ a:focus-visible, button:focus-visible {
 .mobile-bar .btn { flex: 1; min-height: 52px; }
 
 /* nav collapses to the menu button well before it can crowd the header */
-@media (max-width: 1080px) {
+@media (max-width: 1150px) {
   .nav-desktop { display: none; }
   .icon-btn { display: inline-flex; }
 }
@@ -240,8 +240,9 @@ a:focus-visible, button:focus-visible {
 .hero__dots span { width: 9px; height: 9px; border-radius: 50%; background: rgba(255,248,239,.45); }
 .hero__dots span.is-active { background: #fff8ef; }
 .hero__pause {
-  min-height: 40px; padding: 6px 14px; border-radius: 999px; border: none; cursor: pointer;
-  background: rgba(38,28,22,.55); color: #fff8ef; font-weight: 700; font-size: .85rem;
+  width: 44px; height: 44px; padding: 0; border-radius: 50%; border: none; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  background: rgba(38,28,22,.55); color: #fff8ef; font-weight: 700; font-size: .8rem;
 }
 .hero__badge {
   position: absolute; top: 20px; left: 20px; z-index: 3;
