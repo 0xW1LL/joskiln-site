@@ -101,7 +101,8 @@
       if (slides.length < 2 || reduced) { pauseBtn.style.display = "none"; }
       pauseBtn.addEventListener("click", function () {
         paused = !paused;
-        pauseBtn.textContent = paused ? "▶ Play photos" : "❚❚ Pause photos";
+        pauseBtn.textContent = paused ? "▶" : "❚❚";
+        pauseBtn.setAttribute("aria-label", paused ? "Play photos" : "Pause photos");
         pauseBtn.setAttribute("aria-pressed", String(paused));
       });
     }
