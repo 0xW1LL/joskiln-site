@@ -1,0 +1,130 @@
+{
+  "galleries": {
+    "fresh": {
+      "tiles": [
+        {
+          "type": "video",
+          "src": "/assets/img/pumpkin-plate.mp4",
+          "poster": "/assets/img/pumpkin-plate-poster.jpg",
+          "caption": "The pumpkin plate, a bum print in disguise",
+          "alt": "Painted pumpkin plate, the pumpkin made from a little bum print"
+        },
+        {
+          "type": "pair",
+          "src": "/assets/img/workshop-table.jpg",
+          "src2": "/assets/img/snowmen-fired.jpg",
+          "caption": "A winter workshop's snowmen, made and fired",
+          "alt": "A workshop class making snowmen around the big table"
+        },
+        {
+          "type": "image",
+          "src": "/assets/img/hare-moon-nightlight.jpg",
+          "caption": "The hare and the moon nightlight",
+          "alt": "Painted hare sitting on a ceramic moon nightlight with star cut-outs",
+          "nocrop": true
+        },
+        {
+          "type": "image",
+          "src": "/assets/img/mushroom-house-full.jpg",
+          "caption": "A mushroom house from a Thursday group",
+          "alt": "Red-capped ceramic mushroom house with a little green door",
+          "nocrop": true
+        },
+        {
+          "type": "image",
+          "src": "/assets/img/framed-prints-shelf.jpg",
+          "caption": "Painted prints, framed and ready for the wall",
+          "alt": "Framed raised prints in an oak frame on the studio shelf"
+        },
+        {
+          "type": "image",
+          "src": "/assets/img/mother-figure.jpg",
+          "caption": "Mother and child",
+          "alt": "Clay sculpture of a mother holding a baby",
+          "nocrop": true
+        }
+      ]
+    },
+    "baby": {
+      "tiles": [
+        {
+          "type": "image",
+          "src": "/assets/img/harper-framed-cast.jpg",
+          "caption": "A raised cast at nine weeks, framed",
+          "alt": "Framed raised cast of a baby hand and foot"
+        },
+        {
+          "type": "image",
+          "src": "/assets/img/phoebe-cast.jpg",
+          "caption": "Hands and feet in an oak frame",
+          "alt": "Raised casts of two hands and two feet in an oak frame"
+        },
+        {
+          "type": "image",
+          "src": "/assets/img/lewis-plate.jpg",
+          "caption": "A first Christmas, made with tiny feet",
+          "alt": "Painted plate with a footprint snowman and penguin"
+        },
+        {
+          "type": "image",
+          "src": "/assets/img/feet-cast-bronze.jpg",
+          "caption": "Bronze-glazed feet, cast to keep",
+          "alt": "Bronze-glazed cast of two baby feet"
+        },
+        {
+          "type": "image",
+          "src": "/assets/img/footprint-clock-process.jpg",
+          "caption": "A clock in the making",
+          "alt": "A baby foot printing the hours onto a clock face"
+        },
+        {
+          "type": "image",
+          "src": "/assets/img/feet-cast-stars.jpg",
+          "caption": "Ten tiny toes, kept",
+          "alt": "White cast of crossed baby feet on star fabric"
+        }
+      ]
+    },
+    "around": {
+      "tiles": [
+        {
+          "type": "image",
+          "src": "/assets/img/snowman-sculpting.jpg",
+          "caption": "A snowman gets his scarf",
+          "alt": "Hands wrapping a clay scarf around a snowman"
+        },
+        {
+          "type": "image",
+          "src": "/assets/img/hare-sculpture.jpg",
+          "caption": "The hare, before his ears set",
+          "alt": "Life-size clay hare sitting upright"
+        },
+        {
+          "type": "image",
+          "src": "/assets/img/hare-workshop.jpg",
+          "caption": "Big pieces on the big table",
+          "alt": "A large clay hare resting on the workshop table"
+        },
+        {
+          "type": "image",
+          "src": "/assets/img/hare-moon-painted.jpg",
+          "caption": "The hare and the moon, painted",
+          "alt": "Painted hare sitting on a ceramic moon",
+          "nocrop": true
+        },
+        {
+          "type": "image",
+          "src": "/assets/img/couple-hands-cast.jpg",
+          "caption": "Two hands, one cast",
+          "alt": "Cast of two adult hands entwined, one wearing a ring"
+        },
+        {
+          "type": "image",
+          "src": "/assets/img/hare-shop-window.jpg",
+          "caption": "The hare, finished and in the window",
+          "alt": "Large finished clay hare lying in the shop window"
+        }
+      ]
+    }
+  }
+}
