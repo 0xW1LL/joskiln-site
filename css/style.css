@@ -468,6 +468,28 @@ html[data-season] .hero__badge.has-strap { display: inline-block; }
 .center { text-align: center; }
 .mt-1 { margin-top: 10px; } .mt-2 { margin-top: 22px; } .mt-3 { margin-top: 40px; }
 .row-between { display: flex; justify-content: space-between; align-items: baseline; gap: 16px; flex-wrap: wrap; }
+
+/* time-limited notice strip (see [data-until] in js/main.js) */
+.callout {
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 20px 28px; flex-wrap: wrap;
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-left: 5px solid var(--accent);
+  border-radius: var(--radius);
+  padding: 22px 26px;
+  box-shadow: var(--shadow);
+}
+.callout__body { flex: 1 1 420px; }
+.callout__lead {
+  font-family: var(--serif); font-size: clamp(1.25rem, 2.4vw, 1.6rem);
+  line-height: 1.25; margin-bottom: .4rem;
+}
+.callout .btn { flex: 0 0 auto; }
+@media (max-width: 560px) {
+  .callout { padding: 20px; }
+  .callout .btn { width: 100%; text-align: center; }
+}
 .visually-hidden {
   position: absolute; width: 1px; height: 1px; overflow: hidden;
   clip: rect(0 0 0 0); white-space: nowrap;

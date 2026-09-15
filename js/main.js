@@ -23,6 +23,15 @@
     el.classList.add("has-strap");
   });
 
+  /* ---------- time-limited notices ----------
+     Any element with data-until="YYYY-MM-DD" deletes itself the day after
+     that date, so a notice can never quietly rot on the site. Extend one by
+     changing its date; end it early by deleting the block. ------------- */
+  document.querySelectorAll("[data-until]").forEach(function (el) {
+    var until = new Date(el.getAttribute("data-until") + "T23:59:59");
+    if (!isNaN(until.getTime()) && Date.now() > until.getTime()) el.remove();
+  });
+
   /* ---------- contact wiring ---------- */
   document.querySelectorAll("[data-phone]").forEach(function (el) {
     el.textContent = C.phoneDisplay || el.textContent;
