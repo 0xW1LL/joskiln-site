@@ -1,0 +1,347 @@
+<!DOCTYPE html>
+<html lang="en-GB">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex, nofollow">
+  <title>Jo's Kiln · photo admin</title>
+  <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Young+Serif&family=Nunito+Sans:wght@400;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+  <style>
+    /* Admin-only styles. Phone-first: everything is one column and
+       every button is big enough for a thumb. */
+    body { background: var(--bg); }
+    .adm-wrap { max-width: 680px; margin: 0 auto; padding: 18px 16px 120px; }
+    .adm-title { font-family: var(--serif); font-size: 1.8rem; margin: 10px 0 4px; }
+    .adm-sub { color: var(--ink-soft); margin-bottom: 18px; }
+
+    /* front door */
+    .door { max-width: 420px; margin: 12vh auto 0; text-align: center; }
+    .door input { width: 100%; font-size: 1.25rem; padding: 14px 16px; border: 2px solid var(--line);
+      border-radius: 12px; margin: 14px 0; text-align: center; }
+    .door .btn { width: 100%; font-size: 1.15rem; padding: 16px; }
+    .door-err { color: #b00020; min-height: 1.4em; margin-top: 10px; font-weight: 700; }
+
+    /* tabs */
+    .adm-tabs { display: flex; gap: 8px; margin: 14px 0 18px; flex-wrap: wrap; }
+    .adm-tabs button { flex: 1 1 30%; font-size: 1rem; font-weight: 800; padding: 13px 8px;
+      border: 2px solid var(--line); background: var(--card); border-radius: 12px; cursor: pointer; }
+    .adm-tabs button[aria-selected="true"] { background: var(--accent); border-color: var(--accent); color: #fff; }
+
+    /* tile cards */
+    .adm-tile { display: grid; grid-template-columns: 96px 1fr; gap: 12px; background: var(--card);
+      border: 1px solid var(--line); border-radius: 14px; padding: 12px; margin-bottom: 12px; align-items: start; }
+    .adm-tile.pick-me { outline: 3px dashed var(--accent); cursor: pointer; }
+    .adm-thumb { position: relative; width: 96px; height: 96px; border-radius: 10px; overflow: hidden; background: var(--bg-alt); }
+    .adm-thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
+    .adm-thumb img + img { position: absolute; inset: 0; clip-path: polygon(55% 0, 100% 0, 100% 100%, 45% 100%); }
+    .adm-badge { position: absolute; left: 4px; bottom: 4px; background: rgba(0,0,0,.65); color: #fff;
+      font-size: .68rem; font-weight: 800; padding: 2px 7px; border-radius: 20px; }
+    .adm-cap { width: 100%; font-size: 1rem; padding: 10px 12px; border: 2px solid var(--line); border-radius: 10px; }
+    .adm-btns { display: flex; gap: 8px; margin-top: 10px; flex-wrap: wrap; }
+    .adm-btns button { font-size: .95rem; font-weight: 800; padding: 10px 14px; border-radius: 10px;
+      border: 2px solid var(--line); background: var(--bg); cursor: pointer; min-width: 52px; }
+    .adm-btns .danger { color: #b00020; border-color: #e6b5bc; }
+    .adm-btns .primary { background: var(--accent); border-color: var(--accent); color: #fff; }
+
+    /* add + save bar */
+    .adm-add { display: flex; gap: 10px; margin: 16px 0 8px; flex-wrap: wrap; }
+    .adm-add .btn { flex: 1 1 40%; text-align: center; font-size: 1.05rem; padding: 15px; cursor: pointer; }
+    .adm-status { position: fixed; left: 0; right: 0; bottom: 0; background: var(--card);
+      border-top: 1px solid var(--line); padding: 12px 16px calc(12px + env(safe-area-inset-bottom, 0px));
+      display: flex; justify-content: space-between; align-items: center; gap: 10px; }
+    .adm-status b { font-size: 1rem; }
+    .ok { color: #1c7c43; } .warn { color: #b00020; }
+    .adm-note { background: var(--bg-alt); border-radius: 12px; padding: 14px 16px; margin: 14px 0; color: var(--ink-soft); }
+    .adm-note b { color: var(--ink); }
+    .seed-box { text-align: center; padding: 30px 10px; }
+    .seed-box .btn { font-size: 1.1rem; padding: 16px 22px; cursor: pointer; }
+    .busy { opacity: .5; pointer-events: none; }
+    .logout { color: var(--ink-soft); font-size: .85rem; text-decoration: underline; background: none; border: none; cursor: pointer; }
+    @media (max-width: 440px) { .adm-tile { grid-template-columns: 80px 1fr; } .adm-thumb { width: 80px; height: 80px; } }
+  </style>
+</head>
+<body>
+  <!-- ================= FRONT DOOR ================= -->
+  <div class="door" id="door">
+    <p class="adm-title">Jo's Kiln</p>
+    <p class="adm-sub">The photo cupboard. Type the studio password to open up.</p>
+    <input type="password" id="door-pass" autocomplete="current-password" aria-label="Studio password">
+    <button class="btn btn--primary" id="door-go">Open up</button>
+    <p class="door-err" id="door-err"></p>
+  </div>
+
+  <!-- ================= ADMIN ================= -->
+  <div class="adm-wrap" id="app" hidden>
+    <p class="adm-title">The photo cupboard</p>
+    <p class="adm-sub">Whatever you change here appears on the website within a minute or two.
+      <button class="logout" id="logout">Lock up</button></p>
+
+    <div class="adm-tabs" role="tablist" id="tabs">
+      <button role="tab" data-tab="fresh" aria-selected="true">Fresh from the kiln</button>
+      <button role="tab" data-tab="baby" aria-selected="false">Baby prints</button>
+      <button role="tab" data-tab="around" aria-selected="false">Around the kiln</button>
+    </div>
+
+    <div id="pick-hint" class="adm-note" hidden><b>Pairing:</b> now tap the photo this one should take turns with. Or <button class="logout" id="pick-cancel">stop pairing</button>.</div>
+
+    <div id="seed" class="seed-box" hidden>
+      <p class="adm-sub">Nothing in the cupboard yet.</p>
+      <button class="btn btn--primary" id="seed-go">Start with the website's current photos</button>
+    </div>
+
+    <div id="tiles"></div>
+
+    <div class="adm-add">
+      <label class="btn btn--primary" for="add-photo">＋ Add a photo</label>
+      <input type="file" id="add-photo" accept="image/*" hidden>
+      <label class="btn btn--ghost" for="add-video" id="add-video-label" hidden>＋ Add a video</label>
+      <input type="file" id="add-video" accept="video/*" hidden>
+    </div>
+    <p class="adm-note">Photos shrink themselves before they upload, so straight off the camera roll is fine.
+      New pieces land at the bottom; use the arrows to move them up.</p>
+
+    <div class="adm-status">
+      <b id="status">Ready</b>
+      <span id="counts" style="color:var(--ink-soft);font-size:.85rem"></span>
+    </div>
+  </div>
+
+  <script src="js/config.js"></script>
+  <script>
+  (function () {
+    "use strict";
+    var C = window.JK_CONFIG || {};
+    var KEY_STORE = "jk_admin_key";
+    var GALLERY_TITLES = { fresh: "Fresh from the kiln", baby: "Baby prints", around: "Around the kiln" };
+    var key = "";
+    var manifest = { galleries: { fresh: { tiles: [] }, baby: { tiles: [] }, around: { tiles: [] } } };
+    var tab = "fresh";
+    var pairing = null;      /* index of the tile waiting for a partner */
+    var saveTimer = null;
+    var dirty = false;
+
+    var $ = function (id) { return document.getElementById(id); };
+
+    /* ---------- tiny helpers ---------- */
+    function status(msg, cls) { var s = $("status"); s.textContent = msg; s.className = cls || ""; }
+    function tiles() { return manifest.galleries[tab].tiles; }
+    function post(url, body) {
+      return fetch(url, { method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body) }).then(function (r) {
+          return r.json().then(function (j) { return { ok: r.ok, data: j }; });
+        });
+    }
+
+    /* ---------- front door ---------- */
+    function tryKey(k, silent) {
+      return post("/api/gallery-save", { key: k, ping: true }).then(function (r) {
+        if (r.ok) {
+          key = k;
+          try { localStorage.setItem(KEY_STORE, k); } catch (e) {}
+          $("door").hidden = true; $("app").hidden = false;
+          loadManifest();
+        } else if (!silent) {
+          $("door-err").textContent = r.data && r.data.error ? r.data.error : "Something went wrong. Try again.";
+        }
+        return r.ok;
+      }).catch(function () {
+        if (!silent) $("door-err").textContent = "No connection. Try again in a minute.";
+        return false;
+      });
+    }
+    $("door-go").addEventListener("click", function () { tryKey($("door-pass").value); });
+    $("door-pass").addEventListener("keydown", function (e) { if (e.key === "Enter") tryKey($("door-pass").value); });
+    $("logout").addEventListener("click", function () {
+      try { localStorage.removeItem(KEY_STORE); } catch (e) {}
+      location.reload();
+    });
+    var remembered = null;
+    try { remembered = localStorage.getItem(KEY_STORE); } catch (e) {}
+    if (remembered) { tryKey(remembered, true); }
+
+    /* ---------- load + render ---------- */
+    function loadManifest() {
+      status("Fetching the cupboard…");
+      fetch("/api/gallery-list", { cache: "no-store" }).then(function (r) { return r.json(); })
+        .then(function (data) {
+          if (data && data.galleries) {
+            Object.keys(manifest.galleries).forEach(function (k) {
+              if (data.galleries[k] && Array.isArray(data.galleries[k].tiles)) manifest.galleries[k] = data.galleries[k];
+            });
+            $("seed").hidden = true;
+          } else {
+            $("seed").hidden = false;
+          }
+          status("Ready"); render();
+        })
+        .catch(function () { status("Could not load. Refresh to try again.", "warn"); });
+    }
+    $("seed-go").addEventListener("click", function () {
+      $("seed").classList.add("busy");
+      fetch("assets/gallery-seed.json").then(function (r) { return r.json(); }).then(function (s) {
+        manifest = s; $("seed").hidden = true; render(); scheduleSave();
+      }).catch(function () { status("Could not load the starter photos.", "warn"); $("seed").classList.remove("busy"); });
+    });
+
+    function thumbFor(t) {
+      var d = document.createElement("div"); d.className = "adm-thumb";
+      var i1 = document.createElement("img"); i1.src = t.type === "video" ? (t.poster || "") : t.src; i1.alt = "";
+      d.appendChild(i1);
+      if (t.type === "pair") { var i2 = document.createElement("img"); i2.src = t.src2; i2.alt = ""; d.appendChild(i2); }
+      if (t.type !== "image") { var b = document.createElement("span"); b.className = "adm-badge";
+        b.textContent = t.type === "video" ? "video" : "takes turns"; d.appendChild(b); }
+      return d;
+    }
+
+    function render() {
+      var host = $("tiles"); host.innerHTML = "";
+      tiles().forEach(function (t, i) {
+        var card = document.createElement("div"); card.className = "adm-tile";
+        if (pairing !== null && pairing !== i && t.type === "image") {
+          card.classList.add("pick-me");
+          card.addEventListener("click", function () { finishPair(i); });
+        }
+        card.appendChild(thumbFor(t));
+        var right = document.createElement("div");
+        var cap = document.createElement("input");
+        cap.className = "adm-cap"; cap.maxLength = 140; cap.value = t.caption || "";
+        cap.placeholder = "One line about this piece";
+        cap.addEventListener("input", function () { t.caption = cap.value; scheduleSave(); });
+        right.appendChild(cap);
+        var btns = document.createElement("div"); btns.className = "adm-btns";
+        function btn(label, cls, fn) { var b = document.createElement("button"); b.textContent = label;
+          if (cls) b.className = cls; b.addEventListener("click", fn); btns.appendChild(b); }
+        btn("↑", "", function () { move(i, -1); });
+        btn("↓", "", function () { move(i, 1); });
+        if (t.type === "image") btn("Pair", "", function () { pairing = i; $("pick-hint").hidden = false; render(); });
+        if (t.type === "pair") btn("Split", "", function () { splitPair(i); });
+        btn("Remove", "danger", function () { removeTile(i); });
+        right.appendChild(btns);
+        card.appendChild(right);
+        host.appendChild(card);
+      });
+      $("counts").textContent = GALLERY_TITLES[tab] + " · " + tiles().length + " tiles";
+      $("add-video-label").hidden = !(C.cloudinaryCloudName && C.cloudinaryPreset);
+    }
+
+    /* ---------- edits ---------- */
+    function move(i, d) {
+      var arr = tiles(); var j = i + d;
+      if (j < 0 || j >= arr.length) return;
+      var t = arr[i]; arr[i] = arr[j]; arr[j] = t;
+      render(); scheduleSave();
+    }
+    function removeTile(i) {
+      var t = tiles()[i];
+      if (!confirm("Take this one off the website? The photo itself is not deleted, just taken off display.")) return;
+      tiles().splice(i, 1); render(); scheduleSave();
+    }
+    function finishPair(j) {
+      var arr = tiles(); var a = arr[pairing]; var b = arr[j];
+      a.type = "pair"; a.src2 = b.src;
+      arr.splice(j, 1);
+      pairing = null; $("pick-hint").hidden = true;
+      render(); scheduleSave();
+    }
+    function splitPair(i) {
+      var arr = tiles(); var t = arr[i];
+      arr.splice(i + 1, 0, { type: "image", src: t.src2, caption: "", alt: t.alt || "" });
+      t.type = "image"; delete t.src2;
+      render(); scheduleSave();
+    }
+    $("pick-cancel").addEventListener("click", function () { pairing = null; $("pick-hint").hidden = true; render(); });
+
+    /* ---------- tabs ---------- */
+    $("tabs").addEventListener("click", function (e) {
+      var b = e.target.closest("button[data-tab]"); if (!b) return;
+      tab = b.getAttribute("data-tab");
+      pairing = null; $("pick-hint").hidden = true;
+      document.querySelectorAll("#tabs button").forEach(function (x) {
+        x.setAttribute("aria-selected", String(x === b));
+      });
+      render();
+    });
+
+    /* ---------- add photo (shrunk on the phone first) ---------- */
+    $("add-photo").addEventListener("change", function () {
+      var file = this.files && this.files[0]; this.value = "";
+      if (!file) return;
+      status("Shrinking the photo…");
+      var img = new Image();
+      var url = URL.createObjectURL(file);
+      img.onload = function () {
+        var MAX = 1600;
+        var scale = Math.min(1, MAX / Math.max(img.width, img.height));
+        var cv = document.createElement("canvas");
+        cv.width = Math.round(img.width * scale); cv.height = Math.round(img.height * scale);
+        cv.getContext("2d").drawImage(img, 0, 0, cv.width, cv.height);
+        URL.revokeObjectURL(url);
+        cv.toBlob(function (blob) {
+          if (!blob) return status("That photo would not open.", "warn");
+          var fr = new FileReader();
+          fr.onload = function () {
+            var b64 = String(fr.result).split(",")[1];
+            status("Uploading…");
+            post("/api/gallery-upload", { key: key, filename: file.name, contentType: "image/jpeg", data: b64 })
+              .then(function (r) {
+                if (!r.ok) return status(r.data.error || "Upload failed.", "warn");
+                tiles().push({ type: "image", src: r.data.url, caption: "" });
+                render(); scheduleSave();
+              }).catch(function () { status("Upload failed. Try again.", "warn"); });
+          };
+          fr.readAsDataURL(blob);
+        }, "image/jpeg", 0.82);
+      };
+      img.onerror = function () { URL.revokeObjectURL(url); status("That photo would not open.", "warn"); };
+      img.src = url;
+    });
+
+    /* ---------- add video (straight to Cloudinary) ---------- */
+    $("add-video").addEventListener("change", function () {
+      var file = this.files && this.files[0]; this.value = "";
+      if (!file) return;
+      if (file.size > 95 * 1024 * 1024) return status("That video is too big. Under 30 seconds works best.", "warn");
+      status("Uploading the video… this can take a minute.");
+      var fd = new FormData();
+      fd.append("file", file);
+      fd.append("upload_preset", C.cloudinaryPreset);
+      fetch("https://api.cloudinary.com/v1_1/" + C.cloudinaryCloudName + "/video/upload", { method: "POST", body: fd })
+        .then(function (r) { return r.json(); })
+        .then(function (j) {
+          if (!j.public_id) return status((j.error && j.error.message) || "Video upload failed.", "warn");
+          var base = "https://res.cloudinary.com/" + C.cloudinaryCloudName + "/video/upload/";
+          tiles().push({
+            type: "video",
+            src: base + "w_540,q_auto,ac_none/" + j.public_id + ".mp4",
+            poster: base + "so_0,w_540,q_auto/" + j.public_id + ".jpg",
+            caption: ""
+          });
+          render(); scheduleSave();
+        })
+        .catch(function () { status("Video upload failed. Try again.", "warn"); });
+    });
+
+    /* ---------- saving (automatic, a moment after each change) ---------- */
+    function scheduleSave() {
+      dirty = true;
+      status("Saving…");
+      clearTimeout(saveTimer);
+      saveTimer = setTimeout(doSave, 900);
+    }
+    function doSave() {
+      post("/api/gallery-save", { key: key, manifest: manifest }).then(function (r) {
+        if (r.ok) { dirty = false; status("Saved. It is on the website.", "ok"); }
+        else status(r.data.error || "Could not save.", "warn");
+      }).catch(function () { status("Could not save. Check your signal and change something to retry.", "warn"); });
+    }
+    window.addEventListener("beforeunload", function (e) {
+      if (dirty) { e.preventDefault(); e.returnValue = ""; }
+    });
+  })();
+  </script>
+</body>
+</html>

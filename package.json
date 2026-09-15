@@ -1,0 +1,8 @@
+{
+  "name": "joskiln-site",
+  "private": true,
+  "description": "Jo's Kiln static site. The dependency below is only used by the serverless functions in /api.",
+  "dependencies": {
+    "@vercel/blob": "^2.8.0"
+  }
+}
