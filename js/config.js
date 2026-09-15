@@ -39,6 +39,13 @@ window.JK_CONFIG = {
   instagramFeedUrl: "",
   instagramProfile: "https://instagram.com/joskiln",
 
+  /* --- Cloudinary (video uploads from the admin page) ---------- */
+  /* Free account at cloudinary.com. Settings -> Upload -> add an
+     UNSIGNED upload preset. Both values are public, not secrets.
+     Until they are filled in, the admin page hides "Add video".   */
+  cloudinaryCloudName: "",
+  cloudinaryPreset:    "",
+
   /* --- Forms (Formspree) -------------------------------------- */
   /* Create a free form at formspree.io pointing at Jo's email,
      paste the endpoint. Until then, submitting opens the visitor's

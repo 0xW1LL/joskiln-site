@@ -242,7 +242,7 @@
   });
 
   /* ---------- crossfading gallery tiles ---------- */
-  document.querySelectorAll(".tile-fade").forEach(function (tf) {
+  function startFade(tf) {
     var slides = tf.querySelectorAll("img");
     if (slides.length < 2 || reduced) return;
     var idx = 0;
@@ -251,7 +251,72 @@
       idx = (idx + 1) % slides.length;
       slides[idx].classList.add("is-active");
     }, 4500);
-  });
+  }
+  document.querySelectorAll(".tile-fade").forEach(startFade);
+
+  /* ---------- Jo's own galleries (kept from /admin) ----------
+     If Jo has saved a gallery in the admin page, its tiles replace
+     the hand-picked ones baked into the HTML. Grids she has not
+     touched fall through to the Instagram feed (when wired) and
+     then to the baked-in photos. Nothing here can break the page:
+     any failure just leaves the HTML as it is. */
+  function buildTile(t) {
+    var fig = document.createElement("figure");
+    var caption = t.caption || "";
+    var alt = t.alt || caption || "A piece from the studio";
+    if (t.type === "video") {
+      var v = document.createElement("video");
+      v.src = t.src;
+      if (t.poster) v.poster = t.poster;
+      v.muted = true; v.loop = true; v.playsInline = true;
+      v.setAttribute("muted", ""); v.setAttribute("playsinline", "");
+      v.preload = "metadata";
+      v.setAttribute("aria-label", alt);
+      if (reduced) { v.setAttribute("controls", ""); }
+      else { v.autoplay = true; v.setAttribute("autoplay", ""); }
+      fig.appendChild(v);
+    } else if (t.type === "pair" && t.src2) {
+      var wrap = document.createElement("div");
+      wrap.className = "tile-fade";
+      [t.src, t.src2].forEach(function (s, i) {
+        var im = document.createElement("img");
+        im.src = s; im.alt = i === 0 ? alt : ""; im.loading = "lazy";
+        if (i === 0) im.className = "is-active";
+        wrap.appendChild(im);
+      });
+      fig.appendChild(wrap);
+      startFade(wrap);
+    } else {
+      var img = document.createElement("img");
+      img.src = t.src; img.alt = alt; img.loading = "lazy";
+      if (t.nocrop) img.className = "no-crop";
+      fig.appendChild(img);
+    }
+    if (caption) {
+      var fc = document.createElement("figcaption");
+      fc.textContent = caption;
+      fig.appendChild(fc);
+    }
+    return fig;
+  }
+  var jkGrids = document.querySelectorAll("[data-gallery]");
+  if (jkGrids.length) {
+    fetch("/api/gallery-list", { cache: "no-store" })
+      .then(function (r) { return r.json(); })
+      .then(function (data) {
+        if (!data || data.empty || !data.galleries) return;
+        jkGrids.forEach(function (grid) {
+          var g = data.galleries[grid.getAttribute("data-gallery")];
+          if (!g || !g.tiles || !g.tiles.length) return;
+          grid.removeAttribute("data-ig-grid"); /* Jo's picks win over Instagram */
+          grid.innerHTML = "";
+          g.tiles.forEach(function (t) { grid.appendChild(buildTile(t)); });
+          var note = grid.parentElement && grid.parentElement.querySelector(".auto-note");
+          if (note) note.textContent = "Jo keeps this gallery up to date herself, fresh from the studio";
+        });
+      })
+      .catch(function () { /* keep the baked-in photos */ });
+  }
 
   /* ---------- looping gallery video: stop for reduced-motion visitors ---------- */
   if (reduced) {
