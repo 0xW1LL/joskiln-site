@@ -1,9 +1,4 @@
 {
   "cleanUrls": true,
-  "trailingSlash": false,
-  "functions": {
-    "api/agent-run.js": {
-      "maxDuration": 120
-    }
-  }
+  "trailingSlash": false
 }
