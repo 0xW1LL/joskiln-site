@@ -81,7 +81,9 @@ module.exports = async (req, res) => {
       model: MODEL_SMALL, max_tokens: 300,
       system: "You route website change requests. Pages: " + EDITABLE.join(", ") +
         ". index.html is the homepage; whats-on.html classes and booking; baby-prints.html baby prints and belly bowls; around-the-kiln.html community and membership; find-us.html contact and directions. " +
-        "Requests about gallery PHOTOS are out of scope (Jo's photo editor handles those). " +
+        "NEVER ask for clarification and never refuse for vagueness: if the request is vague, pick the most likely 1-2 pages and let the drafter (which reads the full pages) work it out. " +
+        "feasible:false ONLY when the request is about gallery photos (Jo's photo editor handles those) or is clearly not a website text change at all. " +
+        "The reason is shown to Jo, who is not technical: one short warm sentence, no file names, no jargon. " +
         'Reply ONLY with JSON: {"feasible":true|false,"reason":"...","files":["..."]} (1-2 files).',
       messages: [{ role: "user", content: message }]
     });
@@ -90,6 +92,10 @@ module.exports = async (req, res) => {
     let route;
     try { route = JSON.parse(smallJson.content[0].text.match(/\{[\s\S]*\}/)[0]); }
     catch (e) { route = { feasible: true, files: ["index.html"] }; }
+    /* the router must never quiz Jo: a "please clarify" style refusal, or one
+       that leaks file names, gets overridden and the drafter works it out */
+    if (!route.feasible && /\.html|clarif|specif/i.test(route.reason || ""))
+      route = { feasible: true, files: route.files || [] };
     if (!route.feasible) {
       emit({ error: route.reason || "That one is better done in the photo editor or by asking Will." });
       emit({ done: false }); return res.end();
