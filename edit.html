@@ -1,0 +1,411 @@
+<!DOCTYPE html>
+<html lang="en-GB">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex, nofollow">
+  <title>Jo's Kiln · edit the website</title>
+  <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Young+Serif&family=Nunito+Sans:wght@400;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+  <style>
+    [hidden] { display: none !important; }
+    body { background: var(--bg); padding-bottom: 130px; }
+
+    /* ---------- top banner ---------- */
+    .ed-banner { position: sticky; top: 0; z-index: 50; background: #2a2a2a; color: #fff;
+      padding: 10px 16px; display: flex; justify-content: space-between; align-items: center; gap: 10px; }
+    .ed-banner b { font-size: .95rem; font-weight: 800; }
+    .ed-banner .st { font-size: .85rem; color: #c9c9c9; }
+    .ed-banner .st.ok { color: #7fd7a1; } .ed-banner .st.warn { color: #ffb3ad; }
+    .ed-banner a { color: #fff; font-size: .8rem; }
+
+    /* ---------- door (same as the cupboard) ---------- */
+    .door { max-width: 420px; margin: 12vh auto 0; text-align: center; padding: 0 16px; }
+    .door input { width: 100%; font-size: 1.25rem; padding: 14px 16px; border: 2px solid var(--line);
+      border-radius: 12px; margin: 14px 0; text-align: center; }
+    .door .btn { width: 100%; font-size: 1.15rem; padding: 16px; }
+    .door-err { color: #b00020; min-height: 1.4em; margin-top: 10px; font-weight: 700; }
+
+    /* ---------- tiles in edit dress ---------- */
+    .ed-section h2 { font-family: var(--serif); font-size: 1.9rem; margin-bottom: 4px; }
+    .ed-hint { color: var(--ink-soft); margin-bottom: 16px; }
+    .pgrid figure { position: relative; border-radius: 10px; }
+    .pgrid figure.ed-tile { outline: 2px dashed var(--accent); outline-offset: 3px; }
+    .pgrid figure.dragging { opacity: .35; }
+    .pgrid figure.drop-here { outline: 3px solid var(--accent); outline-offset: 3px; }
+    .tt { position: absolute; top: 6px; left: 6px; right: 6px; display: flex; justify-content: space-between; z-index: 5; pointer-events: none; }
+    .tt button { pointer-events: auto; border: 0; background: rgba(0,0,0,.72); color: #fff; font-size: .78rem;
+      font-weight: 800; padding: 5px 10px; border-radius: 14px; cursor: pointer; }
+    .tt .grab { cursor: grab; touch-action: none; letter-spacing: 1px; }
+    .tt .rm { background: rgba(140,20,30,.85); }
+    figcaption[contenteditable] { cursor: text; }
+    figcaption[contenteditable]:focus { outline: 2px solid var(--accent); background: #fff; }
+    figcaption .pen { color: var(--accent); font-size: .9em; margin-left: 6px; }
+    .ghost-tile { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px;
+      min-height: 264px; border: 3px dashed var(--line); border-radius: 12px; color: var(--ink-soft);
+      font-weight: 800; background: var(--bg-alt); cursor: pointer; }
+    .ghost-tile .plus { font-size: 2.4rem; color: var(--accent); line-height: 1; }
+    .ghost-tile small { font-weight: 400; font-size: .85rem; }
+    .drag-avatar { position: fixed; z-index: 100; width: 130px; height: 100px; object-fit: cover;
+      border-radius: 10px; box-shadow: 0 12px 30px rgba(0,0,0,.35); pointer-events: none; transform: translate(-50%,-60%); }
+
+    /* ---------- agent bar & panel ---------- */
+    .agent-wrap { position: fixed; left: 0; right: 0; bottom: 0; z-index: 60; background: var(--card);
+      border-top: 2px solid var(--line); padding: 10px 14px calc(10px + env(safe-area-inset-bottom, 0px)); }
+    .agent-row { display: flex; gap: 8px; max-width: 900px; margin: 0 auto; }
+    .agent-row input { flex: 1; font-size: 1rem; padding: 12px 14px; border: 2px solid var(--line); border-radius: 24px; min-width: 0; }
+    .agent-row button { background: var(--accent); color: #fff; border: 0; font-weight: 800;
+      padding: 12px 20px; border-radius: 24px; font-size: .95rem; cursor: pointer; }
+    .agent-row button.stop { background: #6b6b6b; }
+    .agent-panel { max-width: 900px; margin: 0 auto 8px; background: var(--bg-alt); border-radius: 14px; padding: 12px 14px; }
+    .agent-head { display: flex; align-items: center; gap: 10px; font-weight: 800; }
+    .agent-stage { color: var(--ink-soft); font-weight: 400; }
+    .flame-think { width: 26px; height: 30px; flex: 0 0 auto; }
+    .flame-think path { fill: var(--accent); transform-origin: 50% 85%; animation: thinkFlick .7s ease-in-out infinite alternate; }
+    @keyframes thinkFlick { from { transform: scaleY(.85) scaleX(1.06) } to { transform: scaleY(1.12) scaleX(.94) } }
+    .agent-think { margin-top: 8px; }
+    .agent-think summary { cursor: pointer; font-size: .85rem; color: var(--ink-soft); font-weight: 700; }
+    .agent-think pre { white-space: pre-wrap; font-family: inherit; font-size: .88rem; color: var(--ink-soft);
+      max-height: 160px; overflow-y: auto; margin-top: 6px; }
+    .agent-result { margin-top: 10px; display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+    .agent-result a.btn, .agent-result button { font-size: .92rem; padding: 10px 16px; border-radius: 20px; border: 0; font-weight: 800; cursor: pointer; }
+    .agent-result .go { background: var(--accent); color: #fff; }
+    .agent-result .bin { background: #eee; color: #8c141e; }
+    .agent-summary { width: 100%; font-weight: 700; }
+    .agent-err { color: #b00020; font-weight: 700; margin-top: 8px; }
+  </style>
+</head>
+<body>
+  <!-- ================= FRONT DOOR ================= -->
+  <div class="door" id="door" hidden>
+    <p style="font-family:var(--serif);font-size:1.8rem;margin:10px 0 4px">Jo's Kiln</p>
+    <p style="color:var(--ink-soft)">Editing the website. Type the studio password to begin.</p>
+    <input type="password" id="door-pass" autocomplete="current-password" aria-label="Studio password">
+    <button class="btn btn--primary" id="door-go">Start editing</button>
+    <p class="door-err" id="door-err"></p>
+  </div>
+
+  <!-- ================= EDITOR ================= -->
+  <div id="app" hidden>
+    <div class="ed-banner">
+      <b>You are editing the website</b>
+      <span class="st" id="ed-status">Ready</span>
+      <a href="admin.html">old cupboard</a>
+    </div>
+
+    <main id="sections" class="wrap" style="padding-top:26px"></main>
+  </div>
+
+  <input type="file" id="pick-photo" accept="image/*" hidden>
+
+  <!-- ================= AGENT ================= -->
+  <div class="agent-wrap" id="agent" hidden>
+    <div class="agent-panel" id="agent-panel" hidden>
+      <div class="agent-head">
+        <svg class="flame-think" id="agent-flame" viewBox="0 0 24 30" hidden><path d="M12 2c-4.2 5.2-6.3 8.6-6.3 11.7 0 4 2.8 6.8 6.3 6.8s6.3-2.8 6.3-6.8C18.3 10.6 16.2 7.2 12 2z"/></svg>
+        <span id="agent-stage" class="agent-stage">…</span>
+      </div>
+      <details class="agent-think" id="agent-think-wrap" hidden>
+        <summary>Show thinking</summary>
+        <pre id="agent-think"></pre>
+      </details>
+      <div class="agent-result" id="agent-result" hidden>
+        <span class="agent-summary" id="agent-summary"></span>
+        <a class="btn go" id="agent-preview" target="_blank" rel="noopener">See the preview</a>
+        <button class="go" id="agent-approve">Yes, put it live</button>
+        <button class="bin" id="agent-discard">Bin it</button>
+      </div>
+      <div class="agent-err" id="agent-err" hidden></div>
+    </div>
+    <div class="agent-row">
+      <input id="agent-input" placeholder="Ask for a change, like: take the pregnant mum appeal off">
+      <button id="agent-go">Ask</button>
+    </div>
+  </div>
+
+  <script src="js/config.js"></script>
+  <script>
+  (function () {
+    "use strict";
+    var KEY_STORE = "jk_admin_key";
+    var TITLES = { fresh: "Fresh from the kiln", baby: "Baby prints", around: "Around the kiln" };
+    var key = "", manifest = null, saveTimer = null, dirty = false;
+    var $ = function (id) { return document.getElementById(id); };
+
+    function status(msg, cls) { var s = $("ed-status"); s.textContent = msg; s.className = "st " + (cls || ""); }
+    function post(url, body) {
+      return fetch(url, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) })
+        .then(function (r) { return r.json().then(function (j) { return { ok: r.ok, status: r.status, data: j }; }); });
+    }
+
+    /* ---------- door ---------- */
+    function tryKey(k, silent) {
+      return post("/api/gallery-save", { key: k, ping: true }).then(function (r) {
+        if (r.ok) {
+          key = k; try { localStorage.setItem(KEY_STORE, k); } catch (e) {}
+          $("door").hidden = true; $("app").hidden = false; $("agent").hidden = false;
+          load();
+        } else if (!silent) $("door-err").textContent = (r.data && r.data.error) || "Something went wrong.";
+        return r.ok;
+      }).catch(function () { if (!silent) $("door-err").textContent = "No connection. Try again in a minute."; return false; });
+    }
+    $("door-go").addEventListener("click", function () { tryKey($("door-pass").value); });
+    $("door-pass").addEventListener("keydown", function (e) { if (e.key === "Enter") tryKey($("door-pass").value); });
+    var remembered = null; try { remembered = localStorage.getItem(KEY_STORE); } catch (e) {}
+    if (remembered) tryKey(remembered, true).then(function (ok) { if (!ok) $("door").hidden = false; });
+    else $("door").hidden = false;
+
+    /* ---------- load + render ---------- */
+    function load() {
+      status("Fetching the site…");
+      fetch("/api/gallery-list", { cache: "no-store" }).then(function (r) { return r.json(); }).then(function (d) {
+        if (!d || !d.galleries) {
+          $("sections").innerHTML = '<p style="padding:30px 0">Nothing here yet. Open the <a href="admin.html">cupboard</a> once to load the starter photos.</p>';
+          status("Ready"); return;
+        }
+        manifest = d; render(); status("Ready");
+      }).catch(function () { status("Could not load. Refresh to try again.", "warn"); });
+    }
+
+    function mediaFor(t) {
+      if (t.type === "video") {
+        var v = document.createElement("video");
+        v.src = t.src; if (t.poster) v.poster = t.poster;
+        v.muted = true; v.loop = true; v.playsInline = true; v.autoplay = true; v.preload = "metadata";
+        return v;
+      }
+      var img = document.createElement("img");
+      img.src = t.type === "pair" ? t.src : t.src; img.alt = t.alt || ""; img.loading = "lazy";
+      if (t.nocrop) img.className = "no-crop";
+      return img;
+    }
+
+    function render() {
+      var host = $("sections"); host.innerHTML = "";
+      Object.keys(TITLES).forEach(function (gk) {
+        var sec = document.createElement("section"); sec.className = "ed-section"; sec.style.marginBottom = "44px";
+        var h = document.createElement("h2"); h.textContent = TITLES[gk]; sec.appendChild(h);
+        var hint = document.createElement("p"); hint.className = "ed-hint";
+        hint.textContent = "Hold ⠿ to drag a photo somewhere else. Tap the words to change them.";
+        sec.appendChild(hint);
+        var grid = document.createElement("div"); grid.className = "pgrid"; grid.dataset.g = gk;
+        (manifest.galleries[gk] ? manifest.galleries[gk].tiles : []).forEach(function (t, i) {
+          grid.appendChild(tileEl(gk, t, i));
+        });
+        var ghost = document.createElement("div"); ghost.className = "ghost-tile";
+        ghost.innerHTML = '<span class="plus">＋</span><span>Add a photo here</span><small>a new row appears by itself</small>';
+        ghost.addEventListener("click", function () { addPhoto(gk); });
+        grid.appendChild(ghost);
+        sec.appendChild(grid);
+        host.appendChild(sec);
+      });
+    }
+
+    function tileEl(gk, t, i) {
+      var fig = document.createElement("figure"); fig.className = "ed-tile"; fig.dataset.i = i; fig.dataset.g = gk;
+      var tools = document.createElement("div"); tools.className = "tt";
+      var grab = document.createElement("button"); grab.className = "grab"; grab.textContent = "⠿ drag";
+      grab.addEventListener("pointerdown", function (e) { startDrag(e, gk, i, fig); });
+      tools.appendChild(grab);
+      var right = document.createElement("span");
+      if (t.type === "image") {
+        var swap = document.createElement("button"); swap.textContent = "Swap";
+        swap.addEventListener("click", function () { addPhoto(gk, i); });
+        right.appendChild(swap);
+      }
+      var rm = document.createElement("button"); rm.className = "rm"; rm.textContent = "✕"; rm.title = "Take off the website";
+      rm.style.marginLeft = "6px";
+      rm.addEventListener("click", function () {
+        if (!confirm("Take this one off the website? The photo itself is kept, just not shown.")) return;
+        manifest.galleries[gk].tiles.splice(i, 1); render(); scheduleSave();
+      });
+      right.appendChild(rm);
+      tools.appendChild(right);
+      fig.appendChild(tools);
+      if (t.type === "pair") {
+        var wrap = document.createElement("div"); wrap.className = "tile-fade";
+        var a = document.createElement("img"); a.src = t.src; a.className = "is-active"; a.alt = "";
+        var b = document.createElement("img"); b.src = t.src2; b.alt = "";
+        wrap.appendChild(a); wrap.appendChild(b); fig.appendChild(wrap);
+      } else {
+        fig.appendChild(mediaFor(t));
+      }
+      var cap = document.createElement("figcaption");
+      cap.textContent = t.caption || "Tap to write a line about this piece";
+      cap.setAttribute("contenteditable", "true");
+      var pen = document.createElement("span"); pen.className = "pen"; pen.textContent = "✎"; cap.appendChild(pen);
+      cap.addEventListener("blur", function () {
+        var txt = cap.textContent.replace("✎", "").trim().slice(0, 140);
+        t.caption = txt; scheduleSave();
+      });
+      cap.addEventListener("keydown", function (e) { if (e.key === "Enter") { e.preventDefault(); cap.blur(); } });
+      fig.appendChild(cap);
+      return fig;
+    }
+
+    /* ---------- drag to reorder (pointer events, phone friendly) ---------- */
+    var drag = null;
+    function startDrag(e, gk, i, fig) {
+      e.preventDefault();
+      var av = document.createElement("img");
+      var img = fig.querySelector("img,video");
+      av.src = (img && (img.poster || img.src)) || "";
+      av.className = "drag-avatar";
+      document.body.appendChild(av);
+      fig.classList.add("dragging");
+      drag = { gk: gk, from: i, av: av, fig: fig, over: null };
+      moveAv(e);
+      window.addEventListener("pointermove", moveAv);
+      window.addEventListener("pointerup", endDrag, { once: true });
+    }
+    function moveAv(e) {
+      if (!drag) return;
+      drag.av.style.left = e.clientX + "px"; drag.av.style.top = e.clientY + "px";
+      if (e.clientY > window.innerHeight - 110) window.scrollBy(0, 14);
+      else if (e.clientY < 150) window.scrollBy(0, -14);
+      var el = document.elementFromPoint(e.clientX, e.clientY);
+      var fig = el && el.closest ? el.closest("figure.ed-tile") : null;
+      document.querySelectorAll(".drop-here").forEach(function (x) { x.classList.remove("drop-here"); });
+      if (fig && fig.dataset.g === drag.gk && Number(fig.dataset.i) !== drag.from) {
+        fig.classList.add("drop-here"); drag.over = Number(fig.dataset.i);
+      } else drag.over = null;
+    }
+    function endDrag() {
+      window.removeEventListener("pointermove", moveAv);
+      if (!drag) return;
+      drag.av.remove(); drag.fig.classList.remove("dragging");
+      document.querySelectorAll(".drop-here").forEach(function (x) { x.classList.remove("drop-here"); });
+      if (drag.over !== null) {
+        var arr = manifest.galleries[drag.gk].tiles;
+        var t = arr.splice(drag.from, 1)[0];
+        arr.splice(drag.over, 0, t);
+        render(); scheduleSave();
+      }
+      drag = null;
+    }
+
+    /* ---------- add / swap photos ---------- */
+    var pickTarget = null;
+    function addPhoto(gk, replaceIndex) {
+      pickTarget = { gk: gk, i: (replaceIndex === undefined ? null : replaceIndex) };
+      $("pick-photo").click();
+    }
+    $("pick-photo").addEventListener("change", function () {
+      var file = this.files && this.files[0]; this.value = "";
+      if (!file || !pickTarget) return;
+      status("Shrinking the photo…");
+      var img = new Image(); var url = URL.createObjectURL(file);
+      img.onload = function () {
+        var MAX = 1600, s = Math.min(1, MAX / Math.max(img.width, img.height));
+        var cv = document.createElement("canvas");
+        cv.width = Math.round(img.width * s); cv.height = Math.round(img.height * s);
+        cv.getContext("2d").drawImage(img, 0, 0, cv.width, cv.height);
+        URL.revokeObjectURL(url);
+        cv.toBlob(function (blob) {
+          var fr = new FileReader();
+          fr.onload = function () {
+            status("Uploading…");
+            post("/api/gallery-upload", { key: key, filename: file.name, contentType: "image/jpeg", data: String(fr.result).split(",")[1] })
+              .then(function (r) {
+                if (!r.ok) return status(r.data.error || "Upload failed.", "warn");
+                var arr = manifest.galleries[pickTarget.gk].tiles;
+                if (pickTarget.i === null) arr.push({ type: "image", src: r.data.url, caption: "" });
+                else { arr[pickTarget.i].src = r.data.url; arr[pickTarget.i].type = "image"; delete arr[pickTarget.i].src2; }
+                render(); scheduleSave();
+              }).catch(function () { status("Upload failed. Try again.", "warn"); });
+          };
+          fr.readAsDataURL(blob);
+        }, "image/jpeg", 0.82);
+      };
+      img.onerror = function () { URL.revokeObjectURL(url); status("That photo would not open.", "warn"); };
+      img.src = url;
+    });
+
+    /* ---------- save ---------- */
+    function scheduleSave() {
+      dirty = true; status("Saving…");
+      clearTimeout(saveTimer); saveTimer = setTimeout(function () {
+        post("/api/gallery-save", { key: key, manifest: manifest }).then(function (r) {
+          if (r.ok) { dirty = false; status("Saved. It is on the website.", "ok"); }
+          else status(r.data.error || "Could not save.", "warn");
+        }).catch(function () { status("Could not save. Check your signal.", "warn"); });
+      }, 900);
+    }
+    window.addEventListener("beforeunload", function (e) { if (dirty) { e.preventDefault(); e.returnValue = ""; } });
+
+    /* ================= AGENT ================= */
+    var run = null; /* { controller } */
+    function agentUI(state) {
+      $("agent-panel").hidden = false;
+      if (state === "busy") $("agent-flame").removeAttribute("hidden");
+      else $("agent-flame").setAttribute("hidden", "");
+      $("agent-go").textContent = state === "busy" ? "Stop" : "Ask";
+      $("agent-go").className = state === "busy" ? "stop" : "";
+    }
+    function agentReset() {
+      $("agent-result").hidden = true; $("agent-err").hidden = true;
+      $("agent-think").textContent = ""; $("agent-think-wrap").hidden = true;
+    }
+    $("agent-go").addEventListener("click", function () {
+      if (run) { run.controller.abort(); return; }
+      var msg = $("agent-input").value.trim();
+      if (!msg) return;
+      agentReset(); agentUI("busy");
+      $("agent-stage").textContent = "Having a think…";
+      var controller = new AbortController();
+      run = { controller: controller };
+      fetch("/api/agent-run", {
+        method: "POST", signal: controller.signal,
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ key: key, message: msg })
+      }).then(function (resp) {
+        if (!resp.ok) return resp.json().then(function (j) { throw new Error(j.error || "The helper is not switched on yet."); });
+        var reader = resp.body.getReader(); var dec = new TextDecoder(); var buf = "";
+        function pump() {
+          return reader.read().then(function (x) {
+            if (x.done) return;
+            buf += dec.decode(x.value, { stream: true });
+            var lines = buf.split("\n"); buf = lines.pop();
+            lines.forEach(function (line) {
+              if (!line.startsWith("data:")) return;
+              var ev; try { ev = JSON.parse(line.slice(5)); } catch (e) { return; }
+              if (ev.stage) $("agent-stage").textContent = ev.stage;
+              if (ev.think) { $("agent-think-wrap").hidden = false; $("agent-think").textContent += ev.think; }
+              if (ev.error) { $("agent-err").hidden = false; $("agent-err").textContent = ev.error; }
+              if (ev.done) {
+                $("agent-stage").textContent = "Ready for you to look at.";
+                $("agent-summary").textContent = ev.summary || "Change drafted.";
+                $("agent-preview").href = ev.previewUrl || ev.prUrl || "#";
+                $("agent-result").hidden = false;
+                $("agent-approve").dataset.pr = ev.pr; $("agent-discard").dataset.pr = ev.pr;
+              }
+            });
+            return pump();
+          });
+        }
+        return pump();
+      }).catch(function (e) {
+        if (e.name === "AbortError") $("agent-stage").textContent = "Stopped.";
+        else { $("agent-err").hidden = false; $("agent-err").textContent = e.message; $("agent-stage").textContent = "That did not work."; }
+      }).finally(function () { run = null; agentUI("idle"); });
+    });
+    function decide(action, btn) {
+      var pr = btn.dataset.pr; if (!pr) return;
+      $("agent-stage").textContent = action === "approve" ? "Putting it live…" : "Binning it…";
+      $("agent-result").hidden = true;
+      post("/api/agent-approve", { key: key, pr: Number(pr), action: action }).then(function (r) {
+        if (r.ok) $("agent-stage").textContent = action === "approve"
+          ? "Done. It will be on the website in a minute or two."
+          : "Binned. Nothing changed on the website.";
+        else { $("agent-err").hidden = false; $("agent-err").textContent = r.data.error || "That did not work."; }
+      });
+    }
+    $("agent-approve").addEventListener("click", function () { decide("approve", this); });
+    $("agent-discard").addEventListener("click", function () { decide("discard", this); });
+  })();
+  </script>
+</body>
+</html>
