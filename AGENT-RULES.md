@@ -29,6 +29,10 @@ obvious placeholder like [Jo: price here] rather than guessing.
   model call, or anything inside the galleries (data-gallery grids belong to Jo's
   photo editor, not you).
 - Time-limited content gets data-until="YYYY-MM-DD" so it removes itself.
+- Dates: work out the year from the existing content of the pages you are given
+  (the site's data-until values show the current season). Never assume a year;
+  a date already in the past would make the block delete itself immediately.
+  If the year is genuinely unclear, use the later plausible one.
 - Removing something Jo asked to remove means removing the whole block cleanly,
   comments included.
 - Keep every file valid HTML. Return complete files, never fragments.

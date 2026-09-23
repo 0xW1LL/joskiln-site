@@ -52,29 +52,41 @@
     .drag-avatar { position: fixed; z-index: 100; width: 130px; height: 100px; object-fit: cover;
       border-radius: 10px; box-shadow: 0 12px 30px rgba(0,0,0,.35); pointer-events: none; transform: translate(-50%,-60%); }
 
-    /* ---------- agent bar & panel ---------- */
+    /* ---------- agent bar & thread ---------- */
     .agent-wrap { position: fixed; left: 0; right: 0; bottom: 0; z-index: 60; background: var(--card);
       border-top: 2px solid var(--line); padding: 10px 14px calc(10px + env(safe-area-inset-bottom, 0px)); }
-    .agent-row { display: flex; gap: 8px; max-width: 900px; margin: 0 auto; }
-    .agent-row input { flex: 1; font-size: 1rem; padding: 12px 14px; border: 2px solid var(--line); border-radius: 24px; min-width: 0; }
+    .agent-row { display: flex; gap: 8px; max-width: 900px; margin: 0 auto; align-items: flex-end; }
+    .agent-row textarea { flex: 1; font: inherit; font-size: 1rem; padding: 12px 14px; border: 2px solid var(--line);
+      border-radius: 22px; min-width: 0; resize: none; line-height: 1.35; max-height: 140px; overflow-y: auto; }
     .agent-row button { background: var(--accent); color: #fff; border: 0; font-weight: 800;
       padding: 12px 20px; border-radius: 24px; font-size: .95rem; cursor: pointer; }
     .agent-row button.stop { background: #6b6b6b; }
-    .agent-panel { max-width: 900px; margin: 0 auto 8px; background: var(--bg-alt); border-radius: 14px; padding: 12px 14px; }
+    .agent-log { max-width: 900px; margin: 0 auto; max-height: 58vh; overflow-y: auto; }
+    .agent-log:not(:empty) { margin-bottom: 8px; }
+    .ax { margin-bottom: 10px; }
+    .ax-you { text-align: right; font-size: .9rem; color: var(--ink-soft); font-style: italic; margin-bottom: 4px; }
+    .ax-card { background: var(--bg-alt); border-radius: 14px; padding: 12px 14px; }
     .agent-head { display: flex; align-items: center; gap: 10px; font-weight: 800; }
     .agent-stage { color: var(--ink-soft); font-weight: 400; }
-    .flame-think { width: 26px; height: 30px; flex: 0 0 auto; }
-    .flame-think path { fill: var(--accent); transform-origin: 50% 85%; animation: thinkFlick .7s ease-in-out infinite alternate; }
-    @keyframes thinkFlick { from { transform: scaleY(.85) scaleX(1.06) } to { transform: scaleY(1.12) scaleX(.94) } }
+    .agent-stage.busy { animation: stagePulse 1.4s ease-in-out infinite; }
+    @keyframes stagePulse { 0%,100% { opacity: 1 } 50% { opacity: .45 } }
+    .kiln-think { width: 34px; height: 34px; flex: 0 0 auto; color: var(--ink); }
+    .kiln-think .kiln-fire { fill: var(--accent); stroke: var(--accent); transform-origin: 50% 88%; }
+    .ax-card.busy .kiln-fire { animation: kilnFire .55s ease-in-out infinite alternate; }
+    @keyframes kilnFire { from { transform: scaleY(.7) scaleX(1.12); opacity: .75 } to { transform: scaleY(1.25) scaleX(.9); opacity: 1 } }
     .agent-think { margin-top: 8px; }
     .agent-think summary { cursor: pointer; font-size: .85rem; color: var(--ink-soft); font-weight: 700; }
     .agent-think pre { white-space: pre-wrap; font-family: inherit; font-size: .88rem; color: var(--ink-soft);
-      max-height: 160px; overflow-y: auto; margin-top: 6px; }
+      max-height: 140px; overflow-y: auto; margin-top: 6px; }
+    .ax-preview { width: 100%; height: min(400px, 45vh); border: 2px solid var(--line); border-radius: 12px;
+      background: #fff; margin-top: 10px; display: block; }
     .agent-result { margin-top: 10px; display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
-    .agent-result a.btn, .agent-result button { font-size: .92rem; padding: 10px 16px; border-radius: 20px; border: 0; font-weight: 800; cursor: pointer; }
+    .agent-result a, .agent-result button { font-size: .92rem; padding: 10px 16px; border-radius: 20px;
+      border: 0; font-weight: 800; cursor: pointer; text-decoration: none; }
     .agent-result .go { background: var(--accent); color: #fff; }
+    .agent-result .ghosty { background: #fff; border: 2px solid var(--line); color: var(--ink); }
     .agent-result .bin { background: #eee; color: #8c141e; }
-    .agent-summary { width: 100%; font-weight: 700; }
+    .agent-summary { width: 100%; font-weight: 700; margin-top: 10px; }
     .agent-err { color: #b00020; font-weight: 700; margin-top: 8px; }
   </style>
 </head>
@@ -103,25 +115,9 @@
 
   <!-- ================= AGENT ================= -->
   <div class="agent-wrap" id="agent" hidden>
-    <div class="agent-panel" id="agent-panel" hidden>
-      <div class="agent-head">
-        <svg class="flame-think" id="agent-flame" viewBox="0 0 24 30" hidden><path d="M12 2c-4.2 5.2-6.3 8.6-6.3 11.7 0 4 2.8 6.8 6.3 6.8s6.3-2.8 6.3-6.8C18.3 10.6 16.2 7.2 12 2z"/></svg>
-        <span id="agent-stage" class="agent-stage">…</span>
-      </div>
-      <details class="agent-think" id="agent-think-wrap" hidden>
-        <summary>Show thinking</summary>
-        <pre id="agent-think"></pre>
-      </details>
-      <div class="agent-result" id="agent-result" hidden>
-        <span class="agent-summary" id="agent-summary"></span>
-        <a class="btn go" id="agent-preview" target="_blank" rel="noopener">See the preview</a>
-        <button class="go" id="agent-approve">Yes, put it live</button>
-        <button class="bin" id="agent-discard">Bin it</button>
-      </div>
-      <div class="agent-err" id="agent-err" hidden></div>
-    </div>
+    <div class="agent-log" id="agent-log"></div>
     <div class="agent-row">
-      <input id="agent-input" placeholder="Ask for a change, like: take the pregnant mum appeal off">
+      <textarea id="agent-input" rows="1" placeholder="Ask for a change, like: take the pregnant mum appeal off"></textarea>
       <button id="agent-go">Ask</button>
     </div>
   </div>
@@ -337,32 +333,88 @@
     window.addEventListener("beforeunload", function (e) { if (dirty) { e.preventDefault(); e.returnValue = ""; } });
 
     /* ================= AGENT ================= */
-    var run = null; /* { controller } */
-    function agentUI(state) {
-      $("agent-panel").hidden = false;
-      if (state === "busy") $("agent-flame").removeAttribute("hidden");
-      else $("agent-flame").setAttribute("hidden", "");
-      $("agent-go").textContent = state === "busy" ? "Stop" : "Ask";
-      $("agent-go").className = state === "busy" ? "stop" : "";
+    var run = null;           /* the exchange currently in flight */
+    var KILN_SVG = '<svg class="kiln-think" viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><rect x="14" y="5" width="20" height="4" rx="1.4"/><path d="M19 9v6.5M29 9v6.5"/><path d="M9.5 42V22.5a7 7 0 0 1 7-7h15a7 7 0 0 1 7 7V42"/><path d="M15.5 42V32a8.5 8.5 0 0 1 17 0v10"/><path class="kiln-fire" d="M24 29.5c-2.6 3.2-3.9 5.3-3.9 7.2 0 2.5 1.7 4.2 3.9 4.2s3.9-1.7 3.9-4.2c0-1.9-1.3-4-3.9-7.2z"/><rect x="5.5" y="42" width="37" height="4" rx="1.5"/></svg>';
+    var FLAVOUR = [
+      "Keeping the clay damp…", "Wedging out the air bubbles…", "Steady hands on the wheel…",
+      "A little more slip…", "Checking the glaze…", "Wiping down the bat…"
+    ];
+    function potteryStage(s) {
+      if (s.indexOf("Working out") === 0) return "Sizing up the clay…";
+      if (s.indexOf("Reading") === 0) return s;
+      if (s.indexOf("Drafting") === 0) return "At the wheel, throwing the new page…";
+      if (s.indexOf("Writing") === 0) return "Shaping the rim, smoothing the edges…";
+      if (s.indexOf("Building the preview") === 0) return "Into the kiln, firing the preview…";
+      return s;
     }
-    function agentReset() {
-      $("agent-result").hidden = true; $("agent-err").hidden = true;
-      $("agent-think").textContent = ""; $("agent-think-wrap").hidden = true;
+
+    function newExchange(msg) {
+      var log = $("agent-log");
+      var ax = document.createElement("div"); ax.className = "ax";
+      var you = document.createElement("div"); you.className = "ax-you"; you.textContent = "\u201C" + msg + "\u201D";
+      var card = document.createElement("div"); card.className = "ax-card busy";
+      card.innerHTML = '<div class="agent-head">' + KILN_SVG +
+        '<span class="agent-stage busy">Rolling up sleeves…</span></div>' +
+        '<details class="agent-think" hidden><summary>Show thinking</summary><pre></pre></details>' +
+        '<div class="agent-summary" hidden></div>' +
+        '<iframe class="ax-preview" hidden title="Preview of the change"></iframe>' +
+        '<div class="agent-result" hidden>' +
+        '<button class="go ap">Yes, put it live</button>' +
+        '<a class="ghosty pv" target="_blank" rel="noopener">Open the preview big</a>' +
+        '<button class="bin bn">Bin it</button></div>' +
+        '<div class="agent-err" hidden></div>';
+      ax.appendChild(you); ax.appendChild(card); log.appendChild(ax);
+      log.scrollTop = log.scrollHeight;
+      var ex = {
+        card: card,
+        stage: card.querySelector(".agent-stage"),
+        thinkWrap: card.querySelector(".agent-think"),
+        think: card.querySelector(".agent-think pre"),
+        summary: card.querySelector(".agent-summary"),
+        frame: card.querySelector(".ax-preview"),
+        result: card.querySelector(".agent-result"),
+        err: card.querySelector(".agent-err"),
+        thinkBuf: "", currentStage: "", flavourTimer: null, pr: null
+      };
+      ex.result.querySelector(".ap").addEventListener("click", function () { decide(ex, "approve"); });
+      ex.result.querySelector(".bn").addEventListener("click", function () { decide(ex, "discard"); });
+      /* flavour lines so the kiln feels alive during long stints */
+      ex.flavourTimer = setInterval(function () {
+        if (!ex.card.classList.contains("busy")) return;
+        var f = FLAVOUR[Math.floor(Math.random() * FLAVOUR.length)];
+        ex.stage.textContent = f;
+        setTimeout(function () {
+          if (ex.card.classList.contains("busy")) ex.stage.textContent = ex.currentStage || f;
+        }, 2200);
+      }, 6000);
+      return ex;
     }
+    function setStage(ex, s) { ex.currentStage = potteryStage(s); ex.stage.textContent = ex.currentStage; }
+    function settle(ex) {
+      ex.card.classList.remove("busy"); ex.stage.classList.remove("busy");
+      clearInterval(ex.flavourTimer);
+      $("agent-go").textContent = "Ask"; $("agent-go").className = "";
+      run = null;
+    }
+
     $("agent-go").addEventListener("click", function () {
       if (run) { run.controller.abort(); return; }
       var msg = $("agent-input").value.trim();
       if (!msg) return;
-      agentReset(); agentUI("busy");
-      $("agent-stage").textContent = "Having a think…";
+      $("agent-input").value = ""; growBox();
+      var ex = newExchange(msg);
       var controller = new AbortController();
-      run = { controller: controller };
+      run = { controller: controller, ex: ex };
+      $("agent-go").textContent = "Stop"; $("agent-go").className = "stop";
       fetch("/api/agent-run", {
         method: "POST", signal: controller.signal,
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ key: key, message: msg })
       }).then(function (resp) {
-        if (!resp.ok) return resp.json().then(function (j) { throw new Error(j.error || "The helper is not switched on yet."); });
+        if (!resp.ok) return resp.text().then(function (t) {
+          var j = {}; try { j = JSON.parse(t); } catch (e) {}
+          throw new Error(j.error || "The helper is not switched on yet. Will has one more step to do.");
+        });
         var reader = resp.body.getReader(); var dec = new TextDecoder(); var buf = "";
         function pump() {
           return reader.read().then(function (x) {
@@ -372,15 +424,25 @@
             lines.forEach(function (line) {
               if (!line.startsWith("data:")) return;
               var ev; try { ev = JSON.parse(line.slice(5)); } catch (e) { return; }
-              if (ev.stage) $("agent-stage").textContent = ev.stage;
-              if (ev.think) { $("agent-think-wrap").hidden = false; $("agent-think").textContent += ev.think; }
-              if (ev.error) { $("agent-err").hidden = false; $("agent-err").textContent = ev.error; }
+              if (ev.stage) setStage(ex, ev.stage);
+              if (ev.think) {
+                ex.thinkBuf += ev.think;
+                var shown = ex.thinkBuf.replace(/^\s*PLAN:\s*/i, "");
+                var mk = shown.indexOf("===");
+                if (mk !== -1) shown = shown.slice(0, mk);
+                if (shown.trim()) { ex.thinkWrap.hidden = false; ex.think.textContent = shown; }
+              }
+              if (ev.error) { ex.err.hidden = false; ex.err.textContent = ev.error; ex.stage.textContent = "That one cracked in the kiln."; }
               if (ev.done) {
-                $("agent-stage").textContent = "Ready for you to look at.";
-                $("agent-summary").textContent = ev.summary || "Change drafted.";
-                $("agent-preview").href = ev.previewUrl || ev.prUrl || "#";
-                $("agent-result").hidden = false;
-                $("agent-approve").dataset.pr = ev.pr; $("agent-discard").dataset.pr = ev.pr;
+                ex.pr = ev.pr;
+                ex.stage.textContent = "Out of the kiln. Have a look.";
+                ex.summary.hidden = false; ex.summary.textContent = ev.summary || "Change drafted.";
+                if (ev.previewUrl) {
+                  ex.frame.src = ev.previewUrl; ex.frame.hidden = false;
+                  ex.result.querySelector(".pv").href = ev.previewUrl;
+                } else ex.result.querySelector(".pv").href = ev.prUrl || "#";
+                ex.result.hidden = false;
+                $("agent-log").scrollTop = $("agent-log").scrollHeight;
               }
             });
             return pump();
@@ -388,23 +450,35 @@
         }
         return pump();
       }).catch(function (e) {
-        if (e.name === "AbortError") $("agent-stage").textContent = "Stopped.";
-        else { $("agent-err").hidden = false; $("agent-err").textContent = e.message; $("agent-stage").textContent = "That did not work."; }
-      }).finally(function () { run = null; agentUI("idle"); });
+        if (e.name === "AbortError") ex.stage.textContent = "Stopped. Nothing was changed.";
+        else { ex.err.hidden = false; ex.err.textContent = e.message; ex.stage.textContent = "That one cracked in the kiln."; }
+      }).finally(function () { settle(ex); });
     });
-    function decide(action, btn) {
-      var pr = btn.dataset.pr; if (!pr) return;
-      $("agent-stage").textContent = action === "approve" ? "Putting it live…" : "Binning it…";
-      $("agent-result").hidden = true;
-      post("/api/agent-approve", { key: key, pr: Number(pr), action: action }).then(function (r) {
-        if (r.ok) $("agent-stage").textContent = action === "approve"
-          ? "Done. It will be on the website in a minute or two."
-          : "Binned. Nothing changed on the website.";
-        else { $("agent-err").hidden = false; $("agent-err").textContent = r.data.error || "That did not work."; }
+
+    function decide(ex, action) {
+      if (!ex.pr) return;
+      ex.result.hidden = true;
+      ex.stage.textContent = action === "approve" ? "Setting it on the shelf…" : "Back in the reclaim bucket…";
+      post("/api/agent-approve", { key: key, pr: Number(ex.pr), action: action }).then(function (r) {
+        if (r.ok) {
+          ex.frame.hidden = true;
+          ex.stage.textContent = action === "approve"
+            ? "Done. It will be on the website in a minute or two."
+            : "Binned. Nothing changed on the website.";
+        } else { ex.result.hidden = false; ex.err.hidden = false; ex.err.textContent = r.data.error || "That did not work."; }
       });
     }
-    $("agent-approve").addEventListener("click", function () { decide("approve", this); });
-    $("agent-discard").addEventListener("click", function () { decide("discard", this); });
+
+    /* growing chat box: Enter sends, Shift+Enter makes a new line */
+    function growBox() {
+      var ta = $("agent-input");
+      ta.style.height = "auto";
+      ta.style.height = Math.min(ta.scrollHeight, 140) + "px";
+    }
+    $("agent-input").addEventListener("input", growBox);
+    $("agent-input").addEventListener("keydown", function (e) {
+      if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); if (!run) $("agent-go").click(); }
+    });
   })();
   </script>
 </body>
