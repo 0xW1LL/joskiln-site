@@ -148,7 +148,18 @@
   /* ---------- Baluu booking embed ---------- */
   var embedHost = document.getElementById("booking-embed");
   var embedFallback = document.getElementById("booking-fallback");
-  if (embedHost && C.baluuEmbedUrl) {
+  if (embedHost && C.baluuTimetableSlug) {
+    /* Baluu's timetable web component: script + custom element */
+    var bs = document.createElement("script");
+    bs.src = "https://webcomponents.baluu.io/v4/baluu-widgets.umd.js";
+    bs.async = true;
+    document.head.appendChild(bs);
+    var bt = document.createElement("baluu-timetable");
+    bt.setAttribute("business-slug", C.baluuTimetableSlug);
+    bt.setAttribute("api-url", C.baluuApiUrl || "https://api.bff.baluu.io");
+    embedHost.appendChild(bt);
+    if (embedFallback) embedFallback.style.display = "none";
+  } else if (embedHost && C.baluuEmbedUrl) {
     var iframe = document.createElement("iframe");
     iframe.src = C.baluuEmbedUrl;
     iframe.title = "Book a class at Jo's Kiln";

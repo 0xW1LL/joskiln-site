@@ -24,8 +24,13 @@ window.JK_CONFIG = {
   /* Paste back the moment Jo's first classes are published in Baluu —
      until then What's On shows the friendly fallback card instead of an
      empty calendar. URL: https://jos-kiln.live.baluu.co.uk/events */
-  baluuEmbedUrl:   "",
-  baluuBookingUrl: "",  /* same URL as above — restore with the embed */
+  baluuEmbedUrl:   "",  /* legacy iframe route, superseded by the widget below */
+  baluuBookingUrl: "https://jos-kiln.live.baluu.co.uk/events",
+
+  /* Baluu timetable web component (their current embed, Sept 2026).
+     Blank the slug to fall back to the WhatsApp booking card.        */
+  baluuTimetableSlug: "jos-kiln",
+  baluuApiUrl: "https://api.bff.baluu.io",
 
   /* --- Gift vouchers ------------------------------------------ */
   /* Enable vouchers in Baluu, then paste the URL from
