@@ -83,7 +83,7 @@ module.exports = async (req, res) => {
         ". index.html is the homepage; whats-on.html classes and booking; baby-prints.html baby prints and belly bowls; around-the-kiln.html community and membership; find-us.html contact and directions. " +
         "NEVER ask for clarification and never refuse for vagueness: if the request is vague, pick the most likely 1-2 pages and let the drafter (which reads the full pages) work it out. " +
         "feasible:false ONLY when the request is about gallery photos (Jo's photo editor handles those) or is clearly not a website text change at all. " +
-        "The reason is shown to Jo, who is not technical: one short warm sentence, no file names, no jargon. " +
+        "The reason is shown to Jo, who is not technical: one short warm sentence, no file names, no technical words (stylesheet, HTML, code, layout), never an em dash. For design changes like logos and colours, say that is one for Will. " +
         'Reply ONLY with JSON: {"feasible":true|false,"reason":"...","files":["..."]} (1-2 files).',
       messages: [{ role: "user", content: message }]
     });
@@ -218,6 +218,15 @@ module.exports = async (req, res) => {
       })
     });
     const previewUrl = "https://joskiln-site-git-" + branch + "-" + PREVIEW_SUFFIX + ".vercel.app";
+    /* the preview takes Vercel a little while to build; wait for it so the
+       page Jo sees is never a 404 */
+    emit({ stage: "Firing the preview…" });
+    for (let i = 0; i < 14; i++) {
+      if (closed) return res.end();
+      const ready = await fetch(previewUrl, { redirect: "manual" }).then(r => r.status < 400).catch(() => false);
+      if (ready) break;
+      await new Promise(r => setTimeout(r, 5000));
+    }
     emit({ done: true, summary: draft.summary, pr: pr.number, prUrl: pr.html_url, previewUrl: previewUrl });
     res.end();
   } catch (e) {
