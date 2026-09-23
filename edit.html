@@ -61,6 +61,10 @@
     .agent-row button { background: var(--accent); color: #fff; border: 0; font-weight: 800;
       padding: 12px 20px; border-radius: 24px; font-size: .95rem; cursor: pointer; }
     .agent-row button.stop { background: #6b6b6b; }
+    .agent-min { position: absolute; top: -17px; right: 14px; background: var(--card); border: 2px solid var(--line);
+      border-radius: 16px; padding: 4px 14px; font: inherit; font-size: .8rem; font-weight: 800;
+      color: var(--ink-soft); cursor: pointer; }
+    .agent-wrap.min .agent-log { display: none; }
     .agent-log { max-width: 900px; margin: 0 auto; max-height: 58vh; overflow-y: auto; }
     .agent-log:not(:empty) { margin-bottom: 8px; }
     .ax { margin-bottom: 10px; }
@@ -115,6 +119,7 @@
 
   <!-- ================= AGENT ================= -->
   <div class="agent-wrap" id="agent" hidden>
+    <button class="agent-min" id="agent-min" hidden>Hide the chat ˅</button>
     <div class="agent-log" id="agent-log"></div>
     <div class="agent-row">
       <textarea id="agent-input" rows="1" placeholder="Ask for a change, like: take the pregnant mum appeal off"></textarea>
@@ -348,7 +353,15 @@
       return s;
     }
 
+    $("agent-min").addEventListener("click", function () {
+      var m = $("agent").classList.toggle("min");
+      this.textContent = m ? "Show the chat ˄" : "Hide the chat ˅";
+    });
+    function unmin() { if ($("agent").classList.contains("min")) $("agent-min").click(); }
+
     function newExchange(msg) {
+      $("agent-min").hidden = false;
+      unmin();
       var log = $("agent-log");
       var ax = document.createElement("div"); ax.className = "ax";
       var you = document.createElement("div"); you.className = "ax-you"; you.textContent = "\u201C" + msg + "\u201D";
@@ -432,7 +445,7 @@
                 if (mk !== -1) shown = shown.slice(0, mk);
                 if (shown.trim()) { ex.thinkWrap.hidden = false; ex.think.textContent = shown; }
               }
-              if (ev.error) { ex.err.hidden = false; ex.err.textContent = ev.error; ex.stage.textContent = "That one cracked in the kiln."; }
+              if (ev.error) { ex.err.hidden = false; ex.err.textContent = ev.error; ex.stage.textContent = "That one cracked in the kiln."; unmin(); }
               if (ev.done) {
                 ex.pr = ev.pr;
                 ex.stage.textContent = "Out of the kiln. Have a look.";
@@ -442,6 +455,7 @@
                   ex.result.querySelector(".pv").href = ev.previewUrl;
                 } else ex.result.querySelector(".pv").href = ev.prUrl || "#";
                 ex.result.hidden = false;
+                unmin();
                 $("agent-log").scrollTop = $("agent-log").scrollHeight;
               }
             });
