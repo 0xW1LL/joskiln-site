@@ -336,15 +336,15 @@
     var run = null;           /* the exchange currently in flight */
     var KILN_SVG = '<svg class="kiln-think" viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><rect x="14" y="5" width="20" height="4" rx="1.4"/><path d="M19 9v6.5M29 9v6.5"/><path d="M9.5 42V22.5a7 7 0 0 1 7-7h15a7 7 0 0 1 7 7V42"/><path d="M15.5 42V32a8.5 8.5 0 0 1 17 0v10"/><path class="kiln-fire" d="M24 29.5c-2.6 3.2-3.9 5.3-3.9 7.2 0 2.5 1.7 4.2 3.9 4.2s3.9-1.7 3.9-4.2c0-1.9-1.3-4-3.9-7.2z"/><rect x="5.5" y="42" width="37" height="4" rx="1.5"/></svg>';
     var FLAVOUR = [
-      "Keeping the clay damp…", "Wedging out the air bubbles…", "Steady hands on the wheel…",
-      "A little more slip…", "Checking the glaze…", "Wiping down the bat…"
+      "Throwing the wheel…", "Sculpting the request…", "Moulding the website…",
+      "Trimming the edges…", "Smoothing the surface…", "Glazing the details…"
     ];
     function potteryStage(s) {
-      if (s.indexOf("Working out") === 0) return "Sizing up the clay…";
+      if (s.indexOf("Working out") === 0) return "Heating up the kiln…";
       if (s.indexOf("Reading") === 0) return s;
-      if (s.indexOf("Drafting") === 0) return "At the wheel, throwing the new page…";
-      if (s.indexOf("Writing") === 0) return "Shaping the rim, smoothing the edges…";
-      if (s.indexOf("Building the preview") === 0) return "Into the kiln, firing the preview…";
+      if (s.indexOf("Drafting") === 0) return "Throwing the wheel…";
+      if (s.indexOf("Writing") === 0) return "Moulding the website…";
+      if (s.indexOf("Building the preview") === 0) return "Into the kiln…";
       return s;
     }
 
