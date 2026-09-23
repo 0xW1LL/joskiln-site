@@ -330,6 +330,8 @@ html[data-season] .hero__badge.has-strap { display: inline-block; }
 }
 .booking-shell h2 { margin-bottom: 4px; }
 #booking-embed iframe { width: 100%; min-height: 640px; border: 0; border-radius: 12px; }
+#booking-embed baluu-timetable { display: block; width: 100%; }
+baluu-timetable:not(:defined) { opacity: 0; }
 .booking-fallback {
   border: 1.5px dashed var(--line); border-radius: 12px; padding: 40px 24px;
   text-align: center; color: var(--ink-soft); margin-top: 18px;
