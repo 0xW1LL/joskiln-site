@@ -63,6 +63,14 @@ module.exports = async (req, res) => {
     return send(res, 503, { error: "The helper is not switched on yet. Will needs to add its two keys." });
   const message = String(body.message || "").slice(0, 1000);
   if (!message.trim()) return send(res, 400, { error: "Say what you would like changed." });
+  /* the last few exchanges, so "why is that" or "make it shorter" make sense */
+  const history = (Array.isArray(body.history) ? body.history : []).slice(-4).map(h => ({
+    ask: String((h && h.ask) || "").slice(0, 300),
+    outcome: String((h && h.outcome) || "").slice(0, 400)
+  })).filter(h => h.ask);
+  const historyText = history.length
+    ? "The conversation so far (oldest first):\n" + history.map(h => "Jo: " + h.ask + "\nHelper: " + (h.outcome || "(no answer)")).join("\n") + "\n\n"
+    : "";
 
   let closed = false;
   req.on("close", () => { closed = true; });
@@ -78,27 +86,25 @@ module.exports = async (req, res) => {
     const rules = await fetch("https://raw.githubusercontent.com/" + REPO + "/main/AGENT-RULES.md").then(r => r.text());
     const diary = await readDiary();
     const smallResp = await anthropic({
-      model: MODEL_SMALL, max_tokens: 300,
-      system: "You route website change requests. Pages: " + EDITABLE.join(", ") +
-        ". index.html is the homepage; whats-on.html classes and booking; baby-prints.html baby prints and belly bowls; around-the-kiln.html community and membership; find-us.html contact and directions. " +
-        "NEVER ask for clarification and never refuse for vagueness: if the request is vague, pick the most likely 1-2 pages and let the drafter (which reads the full pages) work it out. " +
-        "feasible:false ONLY when the request is about gallery photos (Jo's photo editor handles those) or is clearly not a website text change at all. " +
-        "The reason is shown to Jo, who is not technical: one short warm sentence, no file names, no technical words (stylesheet, HTML, code, layout), never an em dash. For design changes like logos and colours, say that is one for Will. " +
-        'Reply ONLY with JSON: {"feasible":true|false,"reason":"...","files":["..."]} (1-2 files).',
-      messages: [{ role: "user", content: message }]
+      model: MODEL_SMALL, max_tokens: 400,
+      system: "You are the front desk of the helper that edits Jo's pottery studio website. Pages: " + EDITABLE.join(", ") +
+        ". index.html is the homepage; whats-on.html classes, workshops and booking; baby-prints.html baby prints and belly bowls; around-the-kiln.html community and membership; find-us.html contact, opening hours and directions. " +
+        "Decide what Jo's latest message is. " +
+        "kind change: she wants something on the website added, removed or reworded. This includes new sections, notices, offers, events, workshops or 'features' like the belly bowls section (a block of words, maybe with a button, added to a page). These are normal, everyday changes. Pick the 1-2 most likely pages and never ask her to clarify; the next helper reads the full pages. " +
+        "kind photos: she wants to add, swap, reorder or remove gallery photos. She does that herself by dragging and tapping the photos in the editor above this chat. " +
+        "kind chat: she is asking a question, following up on something earlier, saying thanks, or anything that is not a change. " +
+        "For photos and chat, write reply: a short warm answer to Jo (1-3 sentences) using the conversation so far. If she asks why something earlier did not work, explain simply and suggest how to ask again. Plain English, no file names, no technical words, never an em dash. " +
+        'Reply ONLY with JSON: {"kind":"change"|"photos"|"chat","files":["..."],"reply":"..."}',
+      messages: [{ role: "user", content: historyText + "Jo's latest message: " + message }]
     });
     const smallJson = await smallResp.json();
     if (!smallResp.ok) throw new Error("The helper could not start (" + ((smallJson.error || {}).message || "API error") + ").");
     let route;
     try { route = JSON.parse(smallJson.content[0].text.match(/\{[\s\S]*\}/)[0]); }
-    catch (e) { route = { feasible: true, files: ["index.html"] }; }
-    /* the router must never quiz Jo: a "please clarify" style refusal, or one
-       that leaks file names, gets overridden and the drafter works it out */
-    if (!route.feasible && /\.html|clarif|specif/i.test(route.reason || ""))
-      route = { feasible: true, files: route.files || [] };
-    if (!route.feasible) {
-      emit({ error: route.reason || "That one is better done in the photo editor or by asking Will." });
-      emit({ done: false }); return res.end();
+    catch (e) { route = { kind: "change", files: ["index.html"] }; }
+    if ((route.kind === "chat" || route.kind === "photos") && route.reply) {
+      emit({ reply: String(route.reply) });
+      return res.end();
     }
     const files = (route.files || []).filter(f => EDITABLE.includes(f)).slice(0, 2);
     if (!files.length) files.push("index.html");
@@ -125,8 +131,11 @@ module.exports = async (req, res) => {
         "<<<NEW\nwhat that part should become. Leave this empty to remove it.\n" +
         "(repeat ===EDIT ...=== blocks as needed, several per file is fine)\n" +
         "===END===\n" +
-        "Never retype the whole file. Keep each OLD chunk as small as uniqueness allows.",
-      messages: [{ role: "user", content: "Jo asks: " + message + "\n\n" +
+        "Never retype the whole file. Keep each OLD chunk as small as uniqueness allows.\n" +
+        "If the request genuinely cannot be done as a change to the words on these pages (a whole new page, the logo, colours, fonts, page layout, the booking calendar, payments), do not edit. " +
+        "Instead, after your PLAN, write ===REPLY=== then a short warm explanation for Jo (1-3 sentences, plain English, no technical words, never an em dash, say it is one for Will if it needs him), then ===END===. " +
+        "A new section or notice on an existing page, like the belly bowls one, is NOT in that list: just draft it, with placeholders for anything she has not told you.",
+      messages: [{ role: "user", content: historyText + "Jo's latest message: " + message + "\n\n" +
         files.map(f => "FILE " + f + ":\n" + contents[f]).join("\n\n") }]
     });
     if (!bigResp.ok) { const j = await bigResp.json().catch(() => ({})); throw new Error("Drafting failed (" + ((j.error || {}).message || bigResp.status) + ")."); }
@@ -144,7 +153,7 @@ module.exports = async (req, res) => {
         if (ev.type === "content_block_delta" && ev.delta && ev.delta.text) {
           full += ev.delta.text;
           if (inPlan) {
-            const cut = full.indexOf("===SUMMARY===");
+            const cut = Math.max(full.indexOf("===SUMMARY==="), full.indexOf("===REPLY==="));
             if (cut === -1) emit({ think: ev.delta.text });
             else { inPlan = false; emit({ stage: "Writing the new page…" }); }
           }
@@ -154,6 +163,13 @@ module.exports = async (req, res) => {
     }
     if (stopReason === "max_tokens" || (full.indexOf("===EDIT ") !== -1 && full.indexOf("===END===") === -1))
       throw new Error("That change was too big to draft in one go. Try asking for less at a time.");
+    const rcut = full.indexOf("===REPLY===");
+    if (rcut !== -1 && full.indexOf("===SUMMARY===") === -1) {
+      let r = full.slice(rcut + "===REPLY===".length);
+      const re = r.indexOf("===END==="); if (re !== -1) r = r.slice(0, re);
+      emit({ reply: r.trim() || "That one needs Will, so I have left the website as it is." });
+      return res.end();
+    }
     const cut = full.indexOf("===SUMMARY===");
     if (cut === -1) throw new Error("The draft came back in the wrong shape. Try asking again.");
     let tail = full.slice(cut + "===SUMMARY===".length);
@@ -172,7 +188,10 @@ module.exports = async (req, res) => {
       if (!oldTxt) throw new Error("The draft came back garbled. Try asking again.");
       edits.push({ path: path, oldTxt: oldTxt, newTxt: newTxt });
     }
-    if (!edits.length) throw new Error("Nothing needed changing, according to the draft.");
+    if (!edits.length) {
+      emit({ reply: summary || "I looked, and nothing on the website needed changing for that one." });
+      return res.end();
+    }
 
     /* apply the edits to the master copies fetched above */
     const changed = {};
