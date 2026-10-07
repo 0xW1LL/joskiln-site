@@ -402,6 +402,10 @@
       }, 6000);
       return ex;
     }
+    /* the last few asks and what came of them, sent with each new ask */
+    var history = [];
+    function note(ex, text) { if (ex.hist) ex.hist.outcome = String(text || "").slice(0, 400); }
+
     function setStage(ex, s) { ex.currentStage = potteryStage(s); ex.stage.textContent = ex.currentStage; }
     function settle(ex) {
       ex.card.classList.remove("busy"); ex.stage.classList.remove("busy");
@@ -416,13 +420,16 @@
       if (!msg) return;
       $("agent-input").value = ""; growBox();
       var ex = newExchange(msg);
+      var sentHistory = history.slice(-4);
+      ex.hist = { ask: msg, outcome: "" };
+      history.push(ex.hist);
       var controller = new AbortController();
       run = { controller: controller, ex: ex };
       $("agent-go").textContent = "Stop"; $("agent-go").className = "stop";
       fetch("/api/agent-run", {
         method: "POST", signal: controller.signal,
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ key: key, message: msg })
+        body: JSON.stringify({ key: key, message: msg, history: sentHistory })
       }).then(function (resp) {
         if (!resp.ok) return resp.text().then(function (t) {
           var j = {}; try { j = JSON.parse(t); } catch (e) {}
@@ -445,11 +452,18 @@
                 if (mk !== -1) shown = shown.slice(0, mk);
                 if (shown.trim()) { ex.thinkWrap.hidden = false; ex.think.textContent = shown; }
               }
-              if (ev.error) { ex.err.hidden = false; ex.err.textContent = ev.error; ex.stage.textContent = "That one cracked in the kiln."; unmin(); }
+              if (ev.reply) {
+                ex.stage.textContent = "Over to you.";
+                ex.summary.hidden = false; ex.summary.textContent = ev.reply;
+                note(ex, ev.reply);
+                unmin(); $("agent-log").scrollTop = $("agent-log").scrollHeight;
+              }
+              if (ev.error) { ex.err.hidden = false; ex.err.textContent = ev.error; ex.stage.textContent = "That one cracked in the kiln."; note(ex, "It went wrong: " + ev.error); unmin(); }
               if (ev.done) {
                 ex.pr = ev.pr;
                 ex.stage.textContent = "Out of the kiln. Have a look.";
                 ex.summary.hidden = false; ex.summary.textContent = ev.summary || "Change drafted.";
+                note(ex, "Drafted a preview: " + (ev.summary || "a change") + " (waiting for Jo to put it live or bin it)");
                 if (ev.previewUrl) {
                   ex.frame.src = ev.previewUrl; ex.frame.hidden = false;
                   ex.result.querySelector(".pv").href = ev.previewUrl;
@@ -465,7 +479,7 @@
         return pump();
       }).catch(function (e) {
         if (e.name === "AbortError") ex.stage.textContent = "Stopped. Nothing was changed.";
-        else { ex.err.hidden = false; ex.err.textContent = e.message; ex.stage.textContent = "That one cracked in the kiln."; }
+        else { ex.err.hidden = false; ex.err.textContent = e.message; ex.stage.textContent = "That one cracked in the kiln."; note(ex, "It went wrong: " + e.message); }
       }).finally(function () { settle(ex); });
     });
 
@@ -479,6 +493,8 @@
           ex.stage.textContent = action === "approve"
             ? "Done. It will be on the website in a minute or two."
             : "Binned. Nothing changed on the website.";
+          if (ex.hist) ex.hist.outcome = ex.hist.outcome.replace(/ \(waiting.*\)$/, "") +
+            (action === "approve" ? " (Jo put it live)" : " (Jo binned it)");
         } else { ex.result.hidden = false; ex.err.hidden = false; ex.err.textContent = r.data.error || "That did not work."; }
       });
     }
