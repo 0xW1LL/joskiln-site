@@ -1,0 +1,515 @@
+<!DOCTYPE html>
+<html lang="en-GB">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex, nofollow">
+  <title>Jo's Kiln · edit the website</title>
+  <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Young+Serif&family=Nunito+Sans:wght@400;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+  <style>
+    [hidden] { display: none !important; }
+    body { background: var(--bg); padding-bottom: 130px; }
+
+    /* ---------- top banner ---------- */
+    .ed-banner { position: sticky; top: 0; z-index: 50; background: #2a2a2a; color: #fff;
+      padding: 10px 16px; display: flex; justify-content: space-between; align-items: center; gap: 10px; }
+    .ed-banner b { font-size: .95rem; font-weight: 800; }
+    .ed-banner .st { font-size: .85rem; color: #c9c9c9; }
+    .ed-banner .st.ok { color: #7fd7a1; } .ed-banner .st.warn { color: #ffb3ad; }
+    .ed-banner a { color: #fff; font-size: .8rem; }
+
+    /* ---------- door (same as the cupboard) ---------- */
+    .door { max-width: 420px; margin: 12vh auto 0; text-align: center; padding: 0 16px; }
+    .door input { width: 100%; font-size: 1.25rem; padding: 14px 16px; border: 2px solid var(--line);
+      border-radius: 12px; margin: 14px 0; text-align: center; }
+    .door .btn { width: 100%; font-size: 1.15rem; padding: 16px; }
+    .door-err { color: #b00020; min-height: 1.4em; margin-top: 10px; font-weight: 700; }
+
+    /* ---------- tiles in edit dress ---------- */
+    .ed-section h2 { font-family: var(--serif); font-size: 1.9rem; margin-bottom: 4px; }
+    .ed-hint { color: var(--ink-soft); margin-bottom: 16px; }
+    .pgrid figure { position: relative; border-radius: 10px; }
+    .pgrid figure.ed-tile { outline: 2px dashed var(--accent); outline-offset: 3px; }
+    .pgrid figure.dragging { opacity: .35; }
+    .pgrid figure.drop-here { outline: 3px solid var(--accent); outline-offset: 3px; }
+    .tt { position: absolute; top: 6px; left: 6px; right: 6px; display: flex; justify-content: space-between; z-index: 5; pointer-events: none; }
+    .tt button { pointer-events: auto; border: 0; background: rgba(0,0,0,.72); color: #fff; font-size: .78rem;
+      font-weight: 800; padding: 5px 10px; border-radius: 14px; cursor: pointer; }
+    .tt .grab { cursor: grab; touch-action: none; letter-spacing: 1px; }
+    .tt .rm { background: rgba(140,20,30,.85); }
+    figcaption[contenteditable] { cursor: text; }
+    figcaption[contenteditable]:focus { outline: 2px solid var(--accent); background: #fff; }
+    figcaption .pen { color: var(--accent); font-size: .9em; margin-left: 6px; }
+    .ghost-tile { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px;
+      min-height: 264px; border: 3px dashed var(--line); border-radius: 12px; color: var(--ink-soft);
+      font-weight: 800; background: var(--bg-alt); cursor: pointer; }
+    .ghost-tile .plus { font-size: 2.4rem; color: var(--accent); line-height: 1; }
+    .ghost-tile small { font-weight: 400; font-size: .85rem; }
+    .drag-avatar { position: fixed; z-index: 100; width: 130px; height: 100px; object-fit: cover;
+      border-radius: 10px; box-shadow: 0 12px 30px rgba(0,0,0,.35); pointer-events: none; transform: translate(-50%,-60%); }
+
+    /* ---------- agent bar & thread ---------- */
+    .agent-wrap { position: fixed; left: 0; right: 0; bottom: 0; z-index: 60; background: var(--card);
+      border-top: 2px solid var(--line); padding: 10px 14px calc(10px + env(safe-area-inset-bottom, 0px)); }
+    .agent-row { display: flex; gap: 8px; max-width: 900px; margin: 0 auto; align-items: flex-end; }
+    .agent-row textarea { flex: 1; font: inherit; font-size: 1rem; padding: 12px 14px; border: 2px solid var(--line);
+      border-radius: 22px; min-width: 0; resize: none; line-height: 1.35; max-height: 140px; overflow-y: auto; }
+    .agent-row button { background: var(--accent); color: #fff; border: 0; font-weight: 800;
+      padding: 12px 20px; border-radius: 24px; font-size: .95rem; cursor: pointer; }
+    .agent-row button.stop { background: #6b6b6b; }
+    .agent-min { position: absolute; top: -17px; right: 14px; background: var(--card); border: 2px solid var(--line);
+      border-radius: 16px; padding: 4px 14px; font: inherit; font-size: .8rem; font-weight: 800;
+      color: var(--ink-soft); cursor: pointer; }
+    .agent-wrap.min .agent-log { display: none; }
+    .agent-log { max-width: 900px; margin: 0 auto; max-height: 58vh; overflow-y: auto; }
+    .agent-log:not(:empty) { margin-bottom: 8px; }
+    .ax { margin-bottom: 10px; }
+    .ax-you { text-align: right; font-size: .9rem; color: var(--ink-soft); font-style: italic; margin-bottom: 4px; }
+    .ax-card { background: var(--bg-alt); border-radius: 14px; padding: 12px 14px; }
+    .agent-head { display: flex; align-items: center; gap: 10px; font-weight: 800; }
+    .agent-stage { color: var(--ink-soft); font-weight: 400; }
+    .agent-stage.busy { animation: stagePulse 1.4s ease-in-out infinite; }
+    @keyframes stagePulse { 0%,100% { opacity: 1 } 50% { opacity: .45 } }
+    .kiln-think { width: 34px; height: 34px; flex: 0 0 auto; color: var(--ink); }
+    .kiln-think .kiln-fire { fill: var(--accent); stroke: var(--accent); transform-origin: 50% 88%; }
+    .ax-card.busy .kiln-fire { animation: kilnFire .55s ease-in-out infinite alternate; }
+    @keyframes kilnFire { from { transform: scaleY(.7) scaleX(1.12); opacity: .75 } to { transform: scaleY(1.25) scaleX(.9); opacity: 1 } }
+    .agent-think { margin-top: 8px; }
+    .agent-think summary { cursor: pointer; font-size: .85rem; color: var(--ink-soft); font-weight: 700; }
+    .agent-think pre { white-space: pre-wrap; font-family: inherit; font-size: .88rem; color: var(--ink-soft);
+      max-height: 140px; overflow-y: auto; margin-top: 6px; }
+    .ax-preview { width: 100%; height: min(400px, 45vh); border: 2px solid var(--line); border-radius: 12px;
+      background: #fff; margin-top: 10px; display: block; }
+    .agent-result { margin-top: 10px; display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+    .agent-result a, .agent-result button { font-size: .92rem; padding: 10px 16px; border-radius: 20px;
+      border: 0; font-weight: 800; cursor: pointer; text-decoration: none; }
+    .agent-result .go { background: var(--accent); color: #fff; }
+    .agent-result .ghosty { background: #fff; border: 2px solid var(--line); color: var(--ink); }
+    .agent-result .bin { background: #eee; color: #8c141e; }
+    .agent-summary { width: 100%; font-weight: 700; margin-top: 10px; }
+    .agent-err { color: #b00020; font-weight: 700; margin-top: 8px; }
+  </style>
+</head>
+<body>
+  <!-- ================= FRONT DOOR ================= -->
+  <div class="door" id="door" hidden>
+    <p style="font-family:var(--serif);font-size:1.8rem;margin:10px 0 4px">Jo's Kiln</p>
+    <p style="color:var(--ink-soft)">Editing the website. Type the studio password to begin.</p>
+    <input type="password" id="door-pass" autocomplete="current-password" aria-label="Studio password">
+    <button class="btn btn--primary" id="door-go">Start editing</button>
+    <p class="door-err" id="door-err"></p>
+  </div>
+
+  <!-- ================= EDITOR ================= -->
+  <div id="app" hidden>
+    <div class="ed-banner">
+      <b>You are editing the website</b>
+      <span class="st" id="ed-status">Ready</span>
+      <a href="admin.html">old cupboard</a>
+    </div>
+
+    <main id="sections" class="wrap" style="padding-top:26px"></main>
+  </div>
+
+  <input type="file" id="pick-photo" accept="image/*" hidden>
+
+  <!-- ================= AGENT ================= -->
+  <div class="agent-wrap" id="agent" hidden>
+    <button class="agent-min" id="agent-min" hidden>Hide the chat ˅</button>
+    <div class="agent-log" id="agent-log"></div>
+    <div class="agent-row">
+      <textarea id="agent-input" rows="1" placeholder="Ask for a change, like: take the pregnant mum appeal off"></textarea>
+      <button id="agent-go">Ask</button>
+    </div>
+  </div>
+
+  <script src="js/config.js"></script>
+  <script>
+  (function () {
+    "use strict";
+    var KEY_STORE = "jk_admin_key";
+    var TITLES = { fresh: "Fresh from the kiln", baby: "Baby prints", around: "Around the kiln" };
+    var key = "", manifest = null, saveTimer = null, dirty = false;
+    var $ = function (id) { return document.getElementById(id); };
+
+    function status(msg, cls) { var s = $("ed-status"); s.textContent = msg; s.className = "st " + (cls || ""); }
+    function post(url, body) {
+      return fetch(url, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) })
+        .then(function (r) { return r.json().then(function (j) { return { ok: r.ok, status: r.status, data: j }; }); });
+    }
+
+    /* ---------- door ---------- */
+    function tryKey(k, silent) {
+      return post("/api/gallery-save", { key: k, ping: true }).then(function (r) {
+        if (r.ok) {
+          key = k; try { localStorage.setItem(KEY_STORE, k); } catch (e) {}
+          $("door").hidden = true; $("app").hidden = false; $("agent").hidden = false;
+          load();
+        } else if (!silent) $("door-err").textContent = (r.data && r.data.error) || "Something went wrong.";
+        return r.ok;
+      }).catch(function () { if (!silent) $("door-err").textContent = "No connection. Try again in a minute."; return false; });
+    }
+    $("door-go").addEventListener("click", function () { tryKey($("door-pass").value); });
+    $("door-pass").addEventListener("keydown", function (e) { if (e.key === "Enter") tryKey($("door-pass").value); });
+    var remembered = null; try { remembered = localStorage.getItem(KEY_STORE); } catch (e) {}
+    if (remembered) tryKey(remembered, true).then(function (ok) { if (!ok) $("door").hidden = false; });
+    else $("door").hidden = false;
+
+    /* ---------- load + render ---------- */
+    function load() {
+      status("Fetching the site…");
+      fetch("/api/gallery-list", { cache: "no-store" }).then(function (r) { return r.json(); }).then(function (d) {
+        if (!d || !d.galleries) {
+          $("sections").innerHTML = '<p style="padding:30px 0">Nothing here yet. Open the <a href="admin.html">cupboard</a> once to load the starter photos.</p>';
+          status("Ready"); return;
+        }
+        manifest = d; render(); status("Ready");
+      }).catch(function () { status("Could not load. Refresh to try again.", "warn"); });
+    }
+
+    function mediaFor(t) {
+      if (t.type === "video") {
+        var v = document.createElement("video");
+        v.src = t.src; if (t.poster) v.poster = t.poster;
+        v.muted = true; v.loop = true; v.playsInline = true; v.autoplay = true; v.preload = "metadata";
+        return v;
+      }
+      var img = document.createElement("img");
+      img.src = t.type === "pair" ? t.src : t.src; img.alt = t.alt || ""; img.loading = "lazy";
+      if (t.nocrop) img.className = "no-crop";
+      return img;
+    }
+
+    function render() {
+      var host = $("sections"); host.innerHTML = "";
+      Object.keys(TITLES).forEach(function (gk) {
+        var sec = document.createElement("section"); sec.className = "ed-section"; sec.style.marginBottom = "44px";
+        var h = document.createElement("h2"); h.textContent = TITLES[gk]; sec.appendChild(h);
+        var hint = document.createElement("p"); hint.className = "ed-hint";
+        hint.textContent = "Hold ⠿ to drag a photo somewhere else. Tap the words to change them.";
+        sec.appendChild(hint);
+        var grid = document.createElement("div"); grid.className = "pgrid"; grid.dataset.g = gk;
+        (manifest.galleries[gk] ? manifest.galleries[gk].tiles : []).forEach(function (t, i) {
+          grid.appendChild(tileEl(gk, t, i));
+        });
+        var ghost = document.createElement("div"); ghost.className = "ghost-tile";
+        ghost.innerHTML = '<span class="plus">＋</span><span>Add a photo here</span><small>a new row appears by itself</small>';
+        ghost.addEventListener("click", function () { addPhoto(gk); });
+        grid.appendChild(ghost);
+        sec.appendChild(grid);
+        host.appendChild(sec);
+      });
+    }
+
+    function tileEl(gk, t, i) {
+      var fig = document.createElement("figure"); fig.className = "ed-tile"; fig.dataset.i = i; fig.dataset.g = gk;
+      var tools = document.createElement("div"); tools.className = "tt";
+      var grab = document.createElement("button"); grab.className = "grab"; grab.textContent = "⠿ drag";
+      grab.addEventListener("pointerdown", function (e) { startDrag(e, gk, i, fig); });
+      tools.appendChild(grab);
+      var right = document.createElement("span");
+      if (t.type === "image") {
+        var swap = document.createElement("button"); swap.textContent = "Swap";
+        swap.addEventListener("click", function () { addPhoto(gk, i); });
+        right.appendChild(swap);
+      }
+      var rm = document.createElement("button"); rm.className = "rm"; rm.textContent = "✕"; rm.title = "Take off the website";
+      rm.style.marginLeft = "6px";
+      rm.addEventListener("click", function () {
+        if (!confirm("Take this one off the website? The photo itself is kept, just not shown.")) return;
+        manifest.galleries[gk].tiles.splice(i, 1); render(); scheduleSave();
+      });
+      right.appendChild(rm);
+      tools.appendChild(right);
+      fig.appendChild(tools);
+      if (t.type === "pair") {
+        var wrap = document.createElement("div"); wrap.className = "tile-fade";
+        var a = document.createElement("img"); a.src = t.src; a.className = "is-active"; a.alt = "";
+        var b = document.createElement("img"); b.src = t.src2; b.alt = "";
+        wrap.appendChild(a); wrap.appendChild(b); fig.appendChild(wrap);
+      } else {
+        fig.appendChild(mediaFor(t));
+      }
+      var cap = document.createElement("figcaption");
+      cap.textContent = t.caption || "Tap to write a line about this piece";
+      cap.setAttribute("contenteditable", "true");
+      var pen = document.createElement("span"); pen.className = "pen"; pen.textContent = "✎"; cap.appendChild(pen);
+      cap.addEventListener("blur", function () {
+        var txt = cap.textContent.replace("✎", "").trim().slice(0, 140);
+        t.caption = txt; scheduleSave();
+      });
+      cap.addEventListener("keydown", function (e) { if (e.key === "Enter") { e.preventDefault(); cap.blur(); } });
+      fig.appendChild(cap);
+      return fig;
+    }
+
+    /* ---------- drag to reorder (pointer events, phone friendly) ---------- */
+    var drag = null;
+    function startDrag(e, gk, i, fig) {
+      e.preventDefault();
+      var av = document.createElement("img");
+      var img = fig.querySelector("img,video");
+      av.src = (img && (img.poster || img.src)) || "";
+      av.className = "drag-avatar";
+      document.body.appendChild(av);
+      fig.classList.add("dragging");
+      drag = { gk: gk, from: i, av: av, fig: fig, over: null };
+      moveAv(e);
+      window.addEventListener("pointermove", moveAv);
+      window.addEventListener("pointerup", endDrag, { once: true });
+    }
+    function moveAv(e) {
+      if (!drag) return;
+      drag.av.style.left = e.clientX + "px"; drag.av.style.top = e.clientY + "px";
+      if (e.clientY > window.innerHeight - 110) window.scrollBy(0, 14);
+      else if (e.clientY < 150) window.scrollBy(0, -14);
+      var el = document.elementFromPoint(e.clientX, e.clientY);
+      var fig = el && el.closest ? el.closest("figure.ed-tile") : null;
+      document.querySelectorAll(".drop-here").forEach(function (x) { x.classList.remove("drop-here"); });
+      if (fig && fig.dataset.g === drag.gk && Number(fig.dataset.i) !== drag.from) {
+        fig.classList.add("drop-here"); drag.over = Number(fig.dataset.i);
+      } else drag.over = null;
+    }
+    function endDrag() {
+      window.removeEventListener("pointermove", moveAv);
+      if (!drag) return;
+      drag.av.remove(); drag.fig.classList.remove("dragging");
+      document.querySelectorAll(".drop-here").forEach(function (x) { x.classList.remove("drop-here"); });
+      if (drag.over !== null) {
+        var arr = manifest.galleries[drag.gk].tiles;
+        var t = arr.splice(drag.from, 1)[0];
+        arr.splice(drag.over, 0, t);
+        render(); scheduleSave();
+      }
+      drag = null;
+    }
+
+    /* ---------- add / swap photos ---------- */
+    var pickTarget = null;
+    function addPhoto(gk, replaceIndex) {
+      pickTarget = { gk: gk, i: (replaceIndex === undefined ? null : replaceIndex) };
+      $("pick-photo").click();
+    }
+    $("pick-photo").addEventListener("change", function () {
+      var file = this.files && this.files[0]; this.value = "";
+      if (!file || !pickTarget) return;
+      status("Shrinking the photo…");
+      var img = new Image(); var url = URL.createObjectURL(file);
+      img.onload = function () {
+        var MAX = 1600, s = Math.min(1, MAX / Math.max(img.width, img.height));
+        var cv = document.createElement("canvas");
+        cv.width = Math.round(img.width * s); cv.height = Math.round(img.height * s);
+        cv.getContext("2d").drawImage(img, 0, 0, cv.width, cv.height);
+        URL.revokeObjectURL(url);
+        cv.toBlob(function (blob) {
+          var fr = new FileReader();
+          fr.onload = function () {
+            status("Uploading…");
+            post("/api/gallery-upload", { key: key, filename: file.name, contentType: "image/jpeg", data: String(fr.result).split(",")[1] })
+              .then(function (r) {
+                if (!r.ok) return status(r.data.error || "Upload failed.", "warn");
+                var arr = manifest.galleries[pickTarget.gk].tiles;
+                if (pickTarget.i === null) arr.push({ type: "image", src: r.data.url, caption: "" });
+                else { arr[pickTarget.i].src = r.data.url; arr[pickTarget.i].type = "image"; delete arr[pickTarget.i].src2; }
+                render(); scheduleSave();
+              }).catch(function () { status("Upload failed. Try again.", "warn"); });
+          };
+          fr.readAsDataURL(blob);
+        }, "image/jpeg", 0.82);
+      };
+      img.onerror = function () { URL.revokeObjectURL(url); status("That photo would not open.", "warn"); };
+      img.src = url;
+    });
+
+    /* ---------- save ---------- */
+    function scheduleSave() {
+      dirty = true; status("Saving…");
+      clearTimeout(saveTimer); saveTimer = setTimeout(function () {
+        post("/api/gallery-save", { key: key, manifest: manifest }).then(function (r) {
+          if (r.ok) { dirty = false; status("Saved. It is on the website.", "ok"); }
+          else status(r.data.error || "Could not save.", "warn");
+        }).catch(function () { status("Could not save. Check your signal.", "warn"); });
+      }, 900);
+    }
+    window.addEventListener("beforeunload", function (e) { if (dirty) { e.preventDefault(); e.returnValue = ""; } });
+
+    /* ================= AGENT ================= */
+    var run = null;           /* the exchange currently in flight */
+    var KILN_SVG = '<svg class="kiln-think" viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><rect x="14" y="5" width="20" height="4" rx="1.4"/><path d="M19 9v6.5M29 9v6.5"/><path d="M9.5 42V22.5a7 7 0 0 1 7-7h15a7 7 0 0 1 7 7V42"/><path d="M15.5 42V32a8.5 8.5 0 0 1 17 0v10"/><path class="kiln-fire" d="M24 29.5c-2.6 3.2-3.9 5.3-3.9 7.2 0 2.5 1.7 4.2 3.9 4.2s3.9-1.7 3.9-4.2c0-1.9-1.3-4-3.9-7.2z"/><rect x="5.5" y="42" width="37" height="4" rx="1.5"/></svg>';
+    var FLAVOUR = [
+      "Throwing the wheel…", "Sculpting the request…", "Moulding the website…",
+      "Trimming the edges…", "Smoothing the surface…", "Glazing the details…"
+    ];
+    function potteryStage(s) {
+      if (s.indexOf("Working out") === 0) return "Heating up the kiln…";
+      if (s.indexOf("Reading") === 0) return s;
+      if (s.indexOf("Drafting") === 0) return "Throwing the wheel…";
+      if (s.indexOf("Writing") === 0) return "Moulding the website…";
+      if (s.indexOf("Building the preview") === 0) return "Into the kiln…";
+      return s;
+    }
+
+    $("agent-min").addEventListener("click", function () {
+      var m = $("agent").classList.toggle("min");
+      this.textContent = m ? "Show the chat ˄" : "Hide the chat ˅";
+    });
+    function unmin() { if ($("agent").classList.contains("min")) $("agent-min").click(); }
+
+    function newExchange(msg) {
+      $("agent-min").hidden = false;
+      unmin();
+      var log = $("agent-log");
+      var ax = document.createElement("div"); ax.className = "ax";
+      var you = document.createElement("div"); you.className = "ax-you"; you.textContent = "\u201C" + msg + "\u201D";
+      var card = document.createElement("div"); card.className = "ax-card busy";
+      card.innerHTML = '<div class="agent-head">' + KILN_SVG +
+        '<span class="agent-stage busy">Rolling up sleeves…</span></div>' +
+        '<details class="agent-think" hidden><summary>Show thinking</summary><pre></pre></details>' +
+        '<div class="agent-summary" hidden></div>' +
+        '<iframe class="ax-preview" hidden title="Preview of the change"></iframe>' +
+        '<div class="agent-result" hidden>' +
+        '<button class="go ap">Yes, put it live</button>' +
+        '<a class="ghosty pv" target="_blank" rel="noopener">Open the preview big</a>' +
+        '<button class="bin bn">Bin it</button></div>' +
+        '<div class="agent-err" hidden></div>';
+      ax.appendChild(you); ax.appendChild(card); log.appendChild(ax);
+      log.scrollTop = log.scrollHeight;
+      var ex = {
+        card: card,
+        stage: card.querySelector(".agent-stage"),
+        thinkWrap: card.querySelector(".agent-think"),
+        think: card.querySelector(".agent-think pre"),
+        summary: card.querySelector(".agent-summary"),
+        frame: card.querySelector(".ax-preview"),
+        result: card.querySelector(".agent-result"),
+        err: card.querySelector(".agent-err"),
+        thinkBuf: "", currentStage: "", flavourTimer: null, pr: null
+      };
+      ex.result.querySelector(".ap").addEventListener("click", function () { decide(ex, "approve"); });
+      ex.result.querySelector(".bn").addEventListener("click", function () { decide(ex, "discard"); });
+      /* flavour lines so the kiln feels alive during long stints */
+      ex.flavourTimer = setInterval(function () {
+        if (!ex.card.classList.contains("busy")) return;
+        var f = FLAVOUR[Math.floor(Math.random() * FLAVOUR.length)];
+        ex.stage.textContent = f;
+        setTimeout(function () {
+          if (ex.card.classList.contains("busy")) ex.stage.textContent = ex.currentStage || f;
+        }, 2200);
+      }, 6000);
+      return ex;
+    }
+    /* the last few asks and what came of them, sent with each new ask */
+    var history = [];
+    function note(ex, text) { if (ex.hist) ex.hist.outcome = String(text || "").slice(0, 400); }
+
+    function setStage(ex, s) { ex.currentStage = potteryStage(s); ex.stage.textContent = ex.currentStage; }
+    function settle(ex) {
+      ex.card.classList.remove("busy"); ex.stage.classList.remove("busy");
+      clearInterval(ex.flavourTimer);
+      $("agent-go").textContent = "Ask"; $("agent-go").className = "";
+      run = null;
+    }
+
+    $("agent-go").addEventListener("click", function () {
+      if (run) { run.controller.abort(); return; }
+      var msg = $("agent-input").value.trim();
+      if (!msg) return;
+      $("agent-input").value = ""; growBox();
+      var ex = newExchange(msg);
+      var sentHistory = history.slice(-4);
+      ex.hist = { ask: msg, outcome: "" };
+      history.push(ex.hist);
+      var controller = new AbortController();
+      run = { controller: controller, ex: ex };
+      $("agent-go").textContent = "Stop"; $("agent-go").className = "stop";
+      fetch("/api/agent-run", {
+        method: "POST", signal: controller.signal,
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ key: key, message: msg, history: sentHistory })
+      }).then(function (resp) {
+        if (!resp.ok) return resp.text().then(function (t) {
+          var j = {}; try { j = JSON.parse(t); } catch (e) {}
+          throw new Error(j.error || "The helper is not switched on yet. Will has one more step to do.");
+        });
+        var reader = resp.body.getReader(); var dec = new TextDecoder(); var buf = "";
+        function pump() {
+          return reader.read().then(function (x) {
+            if (x.done) return;
+            buf += dec.decode(x.value, { stream: true });
+            var lines = buf.split("\n"); buf = lines.pop();
+            lines.forEach(function (line) {
+              if (!line.startsWith("data:")) return;
+              var ev; try { ev = JSON.parse(line.slice(5)); } catch (e) { return; }
+              if (ev.stage) setStage(ex, ev.stage);
+              if (ev.think) {
+                ex.thinkBuf += ev.think;
+                var shown = ex.thinkBuf.replace(/^\s*PLAN:\s*/i, "");
+                var mk = shown.indexOf("===");
+                if (mk !== -1) shown = shown.slice(0, mk);
+                if (shown.trim()) { ex.thinkWrap.hidden = false; ex.think.textContent = shown; }
+              }
+              if (ev.reply) {
+                ex.stage.textContent = "Over to you.";
+                ex.summary.hidden = false; ex.summary.textContent = ev.reply;
+                note(ex, ev.reply);
+                unmin(); $("agent-log").scrollTop = $("agent-log").scrollHeight;
+              }
+              if (ev.error) { ex.err.hidden = false; ex.err.textContent = ev.error; ex.stage.textContent = "That one cracked in the kiln."; note(ex, "It went wrong: " + ev.error); unmin(); }
+              if (ev.done) {
+                ex.pr = ev.pr;
+                ex.stage.textContent = "Out of the kiln. Have a look.";
+                ex.summary.hidden = false; ex.summary.textContent = ev.summary || "Change drafted.";
+                note(ex, "Drafted a preview: " + (ev.summary || "a change") + " (waiting for Jo to put it live or bin it)");
+                if (ev.previewUrl) {
+                  ex.frame.src = ev.previewUrl; ex.frame.hidden = false;
+                  ex.result.querySelector(".pv").href = ev.previewUrl;
+                } else ex.result.querySelector(".pv").href = ev.prUrl || "#";
+                ex.result.hidden = false;
+                unmin();
+                $("agent-log").scrollTop = $("agent-log").scrollHeight;
+              }
+            });
+            return pump();
+          });
+        }
+        return pump();
+      }).catch(function (e) {
+        if (e.name === "AbortError") ex.stage.textContent = "Stopped. Nothing was changed.";
+        else { ex.err.hidden = false; ex.err.textContent = e.message; ex.stage.textContent = "That one cracked in the kiln."; note(ex, "It went wrong: " + e.message); }
+      }).finally(function () { settle(ex); });
+    });
+
+    function decide(ex, action) {
+      if (!ex.pr) return;
+      ex.result.hidden = true;
+      ex.stage.textContent = action === "approve" ? "Setting it on the shelf…" : "Back in the reclaim bucket…";
+      post("/api/agent-approve", { key: key, pr: Number(ex.pr), action: action }).then(function (r) {
+        if (r.ok) {
+          ex.frame.hidden = true;
+          ex.stage.textContent = action === "approve"
+            ? "Done. It will be on the website in a minute or two."
+            : "Binned. Nothing changed on the website.";
+          if (ex.hist) ex.hist.outcome = ex.hist.outcome.replace(/ \(waiting.*\)$/, "") +
+            (action === "approve" ? " (Jo put it live)" : " (Jo binned it)");
+        } else { ex.result.hidden = false; ex.err.hidden = false; ex.err.textContent = r.data.error || "That did not work."; }
+      });
+    }
+
+    /* growing chat box: Enter sends, Shift+Enter makes a new line */
+    function growBox() {
+      var ta = $("agent-input");
+      ta.style.height = "auto";
+      ta.style.height = Math.min(ta.scrollHeight, 140) + "px";
+    }
+    $("agent-input").addEventListener("input", growBox);
+    $("agent-input").addEventListener("keydown", function (e) {
+      if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); if (!run) $("agent-go").click(); }
+    });
+  })();
+  </script>
+</body>
+</html>
