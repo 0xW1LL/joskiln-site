@@ -249,7 +249,7 @@
     mapHost.appendChild(mf);
   }
   document.querySelectorAll("[data-maps-link]").forEach(function (el) {
-    el.setAttribute("href", "https://www.google.com/maps/search/?api=1&query=" + encodeURIComponent(C.mapQuery || ""));
+    el.setAttribute("href", C.mapsPlaceUrl || ("https://www.google.com/maps/search/?api=1&query=" + encodeURIComponent(C.mapQuery || "")));
   });
 
   /* ---------- crossfading gallery tiles ---------- */

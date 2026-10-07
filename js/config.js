@@ -58,7 +58,9 @@ window.JK_CONFIG = {
   formEndpoint: "",      /* e.g. "https://formspree.io/f/abcdwxyz"  */
 
   /* --- Map ----------------------------------------------------- */
-  mapQuery: "79 Poole Road, Westbourne, Bournemouth BH4 9BB",
+  mapQuery: "Jo's Kiln, 79 Poole Road, Westbourne, Bournemouth BH4 9BB",
+  /* Jo's own Google Maps listing (opens the Maps app on phones) */
+  mapsPlaceUrl: "https://maps.google.com/?cid=16418842648822603245",
 
   /* --- Site ---------------------------------------------------- */
   siteUrl: "https://joskiln.co.uk"   /* update if the domain differs */
