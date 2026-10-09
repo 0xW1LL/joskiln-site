@@ -26,8 +26,8 @@ obvious placeholder like [Jo: price here] rather than guessing.
   anything in assets/.
 - Never change: the header, footer, navigation, hero, phone numbers, the WhatsApp
   wiring (data-whatsapp etc.), prices, opening hours, the consent wording in the
-  model call, or anything inside the galleries (data-gallery grids belong to Jo's
-  photo editor, not you).
+  model call, or anything inside the galleries (data-gallery, data-picks and data-ig-grid grids
+  belong to Jo's photo editor and her Instagram feed, not you).
 - Time-limited content gets data-until="YYYY-MM-DD" so it removes itself.
 - Dates: work out the year from the existing content of the pages you are given
   (the site's data-until values show the current season). Never assume a year;

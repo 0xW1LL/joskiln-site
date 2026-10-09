@@ -41,8 +41,8 @@ window.JK_CONFIG = {
   /* Create a free feed at behold.so for @joskiln, choose JSON,
      paste the feed URL. Galleries then auto-update when Jo posts.
      Until then the hand-picked photos below stay in place.        */
-  instagramFeedUrl: "",
-  instagramProfile: "https://instagram.com/joskiln",
+  instagramFeedUrl: "https://feeds.behold.so/ivtXG0rqBGK5Apnutzs9",
+  instagramProfile: "https://www.instagram.com/jos_kiln_pottery_/",
 
   /* --- Cloudinary (video uploads from the admin page) ---------- */
   /* Free account at cloudinary.com. Settings -> Upload -> add an

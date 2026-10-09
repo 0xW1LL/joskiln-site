@@ -169,38 +169,6 @@
     if (embedFallback) embedFallback.style.display = "none";
   }
 
-  /* ---------- Instagram-fed galleries (Behold JSON) ---------- */
-  /* Grids marked data-ig-grid keep their hand-picked photos until
-     C.instagramFeedUrl is set; then the newest posts replace them. */
-  if (C.instagramFeedUrl) {
-    fetch(C.instagramFeedUrl)
-      .then(function (r) { return r.json(); })
-      .then(function (data) {
-        var posts = data.posts || data.media || [];
-        if (!posts.length) return;
-        document.querySelectorAll("[data-ig-grid]").forEach(function (grid) {
-          var max = parseInt(grid.getAttribute("data-ig-grid"), 10) || 6;
-          grid.innerHTML = "";
-          posts.slice(0, max).forEach(function (p) {
-            var url = p.sizes && p.sizes.medium ? p.sizes.medium.mediaUrl : (p.mediaUrl || p.thumbnailUrl);
-            if (!url) return;
-            var fig = document.createElement("figure");
-            var a = document.createElement("a");
-            a.href = p.permalink || C.instagramProfile;
-            a.target = "_blank"; a.rel = "noopener";
-            var img = document.createElement("img");
-            img.src = url; img.alt = (p.caption || "Fresh from the kiln").slice(0, 80); img.loading = "lazy";
-            a.appendChild(img); fig.appendChild(a);
-            var cap = document.createElement("figcaption");
-            cap.textContent = (p.caption || "").split("\n")[0].slice(0, 60);
-            fig.appendChild(cap);
-            grid.appendChild(fig);
-          });
-        });
-      })
-      .catch(function () { /* keep the static photos */ });
-  }
-
   /* ---------- forms: Formspree when configured, mailto fallback ---------- */
   document.querySelectorAll("form[data-form]").forEach(function (form) {
     form.addEventListener("submit", function (e) {
@@ -310,23 +278,81 @@
     }
     return fig;
   }
-  var jkGrids = document.querySelectorAll("[data-gallery]");
-  if (jkGrids.length) {
-    fetch("/api/gallery-list", { cache: "no-store" })
+  /* ---------- galleries: Jo's saved photos + Instagram ----------
+     Pages with [data-gallery] show Jo's own saved photos.
+     The homepage's top grid [data-ig-grid] shows her newest Instagram
+     posts, with Jo's saved "fresh" photos in the picks strip below.
+     If Instagram fails or is empty, the top grid shows Jo's saved photos
+     instead and the picks strip stays hidden, so nothing ever repeats.
+     Any failure leaves the photos baked into the HTML. */
+  var IG_BADGE = '<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="2.5" y="2.5" width="19" height="19" rx="5.5"/><circle cx="12" cy="12" r="4.5"/><circle cx="17.6" cy="6.4" r="1.3" fill="currentColor" stroke="none"/></svg>';
+  function igTile(p) {
+    var url = (p.sizes && p.sizes.medium && p.sizes.medium.mediaUrl) ||
+      (p.mediaType === "VIDEO" ? p.thumbnailUrl : p.mediaUrl) || p.thumbnailUrl;
+    if (!url) return null;
+    var text = p.prunedCaption || p.caption || "";
+    var fig = document.createElement("figure");
+    var a = document.createElement("a");
+    a.href = p.permalink || C.instagramProfile; a.target = "_blank"; a.rel = "noopener"; a.className = "ig-link";
+    var img = document.createElement("img");
+    img.src = url; img.alt = text.slice(0, 100) || "A new piece from the studio"; img.loading = "lazy";
+    a.appendChild(img);
+    var b = document.createElement("span"); b.className = "ig-badge"; b.innerHTML = IG_BADGE;
+    a.appendChild(b);
+    fig.appendChild(a);
+    var first = text.split("\n")[0].trim();
+    if (first) {
+      var cap = document.createElement("figcaption");
+      cap.textContent = first.length > 70 ? first.slice(0, 67).replace(/\s+\S*$/, "") + "…" : first;
+      fig.appendChild(cap);
+    }
+    return fig;
+  }
+  function fillTiles(grid, tiles) {
+    grid.innerHTML = "";
+    tiles.forEach(function (t) { grid.appendChild(buildTile(t)); });
+  }
+  function joNote(grid) {
+    var note = grid.parentElement && grid.parentElement.querySelector(".auto-note");
+    if (note) note.textContent = "Jo keeps this gallery up to date herself, fresh from the studio";
+  }
+  var igGrid = document.querySelector("[data-ig-grid]");
+  var picksGrid = document.querySelector("[data-picks]");
+  var joGrids = document.querySelectorAll("[data-gallery]");
+  if (igGrid || joGrids.length) {
+    var getManifest = fetch("/api/gallery-list", { cache: "no-store" })
       .then(function (r) { return r.json(); })
-      .then(function (data) {
-        if (!data || data.empty || !data.galleries) return;
-        jkGrids.forEach(function (grid) {
-          var g = data.galleries[grid.getAttribute("data-gallery")];
-          if (!g || !g.tiles || !g.tiles.length) return;
-          grid.removeAttribute("data-ig-grid"); /* Jo's picks win over Instagram */
-          grid.innerHTML = "";
-          g.tiles.forEach(function (t) { grid.appendChild(buildTile(t)); });
-          var note = grid.parentElement && grid.parentElement.querySelector(".auto-note");
-          if (note) note.textContent = "Jo keeps this gallery up to date herself, fresh from the studio";
-        });
-      })
-      .catch(function () { /* keep the baked-in photos */ });
+      .then(function (d) { return d && !d.empty && d.galleries ? d.galleries : null; })
+      .catch(function () { return null; });
+    var getFeed = (igGrid && C.instagramFeedUrl)
+      ? fetch(C.instagramFeedUrl).then(function (r) { return r.ok ? r.json() : null; })
+          .then(function (d) { return (d && (d.posts || d.media)) || []; })
+          .catch(function () { return []; })
+      : Promise.resolve([]);
+    Promise.all([getManifest, getFeed]).then(function (res) {
+      var galleries = res[0], posts = res[1];
+      joGrids.forEach(function (grid) {
+        var g = galleries && galleries[grid.getAttribute("data-gallery")];
+        if (g && g.tiles && g.tiles.length) { fillTiles(grid, g.tiles); joNote(grid); }
+      });
+      if (!igGrid) return;
+      var fresh = galleries && galleries[igGrid.getAttribute("data-fallback")];
+      var freshTiles = fresh && fresh.tiles && fresh.tiles.length ? fresh.tiles : null;
+      var max = parseInt(igGrid.getAttribute("data-ig-grid"), 10) || 6;
+      var igTiles = posts.slice(0, max).map(igTile).filter(Boolean);
+      if (igTiles.length) {
+        igGrid.innerHTML = "";
+        igTiles.forEach(function (t) { igGrid.appendChild(t); });
+        if (picksGrid && freshTiles) {
+          fillTiles(picksGrid, freshTiles);
+          var sec = picksGrid.closest("section");
+          if (sec) sec.hidden = false;
+        }
+      } else if (freshTiles) {
+        fillTiles(igGrid, freshTiles);
+        joNote(igGrid);
+      }
+    });
   }
 
   /* ---------- looping gallery video: stop for reduced-motion visitors ---------- */
