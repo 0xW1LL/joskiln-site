@@ -35,7 +35,7 @@ window.JK_CONFIG = {
   /* --- Gift vouchers ------------------------------------------ */
   /* Enable vouchers in Baluu, then paste the URL from
      Embeds → Sharing links (likely .../gift-cards).               */
-  voucherUrl: "",
+  voucherUrl: "https://jos-kiln.live.baluu.co.uk/giftcard"
 
   /* --- Instagram feed (Behold.so or similar) ------------------ */
   /* Create a free feed at behold.so for @joskiln, choose JSON,
