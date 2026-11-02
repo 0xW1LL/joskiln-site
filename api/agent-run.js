@@ -136,7 +136,8 @@ module.exports = async (req, res) => {
         "If the request genuinely cannot be done as a change to the words on these pages (a whole new page, the logo, colours, fonts, page layout, the booking calendar, payments), do not edit. " +
         "Instead, after your PLAN, write ===REPLY=== then a short warm explanation for Jo (1-3 sentences, plain English, no technical words, never an em dash, say it is one for Will if it needs him), then ===END===. " +
         "A new section or notice on an existing page, like the belly bowls one, is NOT in that list: draft it. " +
-        "Never put placeholders, square brackets, notes to Jo or made-up details (prices, dates, durations, years) on a page, visitors would see them. " +
+        "Never put placeholders, square brackets, notes to Jo or made-up details on a page, visitors would see them. " +
+        "Use only facts Jo gave in this conversation or that are already on the pages. Do not add selling points she did not mention, such as small groups, materials included, full tuition, refreshments, suitable for all ages, prices, dates, durations or years. " +
         "If a new section needs details Jo has not given yet (check the conversation so far), do not edit: write ===REPLY=== and ask her for them in one short friendly message that says exactly what you need, for example how long it runs, the price and when it starts, then ===END===. " +
         "Once she has answered, draft it using exactly her details. " +
         "Today is " + new Date().toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric", timeZone: "Europe/London" }) + ". Never write a year or date that does not come from Jo or from today.",
@@ -255,6 +256,9 @@ module.exports = async (req, res) => {
       if (ready) break;
       await new Promise(r => setTimeout(r, 5000));
     }
+    /* Vercel's edge can still answer "not found" for a few seconds after the
+       build first answers, so give it a short breather before showing it */
+    await new Promise(r => setTimeout(r, 5000));
     emit({ done: true, summary: draft.summary, pr: pr.number, prUrl: pr.html_url, previewUrl: previewUrl });
     res.end();
   } catch (e) {
