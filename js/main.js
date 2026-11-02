@@ -319,8 +319,14 @@
   /* Jo's notices: each tile in her "notices" gallery becomes a card.
      The words before the first full stop are the title, the rest the
      details, and the button opens WhatsApp with the title filled in. */
+  /* a link Jo pastes into a notice (her Baluu booking page) is taken out
+     of the words and becomes the button instead */
+  function noticeLink(text) {
+    var m = (text || "").match(/https?:\/\/[^\s]+/);
+    return m ? m[0].replace(/[.,;)]+$/, "") : "";
+  }
   function splitNotice(text) {
-    text = (text || "").trim();
+    text = (text || "").replace(/https?:\/\/[^\s]+/g, "").replace(/\s+/g, " ").trim();
     var m = text.match(/^([^.!?]{2,70}[.!?])\s+([\s\S]+)$/);
     if (m) return { title: m[1].replace(/\.$/, ""), body: m[2] };
     if (text.length <= 70) return { title: text.replace(/\.$/, ""), body: "" };
@@ -350,6 +356,13 @@
     if (linkTo) {
       var more = document.createElement("span"); more.className = "btn btn--primary ncard__btn";
       more.textContent = "Find out more"; b.appendChild(more);
+    } else if (noticeLink(t.caption)) {
+      var url = noticeLink(t.caption);
+      var go = document.createElement("a"); go.className = "btn btn--primary ncard__btn";
+      go.href = url;
+      if (/baluu/i.test(url)) go.textContent = "Book now";
+      else { go.textContent = "Find out more"; go.target = "_blank"; go.rel = "noopener"; }
+      b.appendChild(go);
     } else {
       var a = document.createElement("a"); a.className = "btn btn--wa ncard__btn";
       var ask = "Hi Jo, I'd like to ask about " + (n.title || "your notice on the website");
