@@ -93,6 +93,7 @@ module.exports = async (req, res) => {
         "kind change: she wants something on the website added, removed or reworded. This includes new sections, notices, offers, events, workshops or 'features' like the belly bowls section (a block of words, maybe with a button, added to a page). These are normal, everyday changes. Pick the 1-2 most likely pages and never ask her to clarify; the next helper reads the full pages. " +
         "kind photos: she wants to add, swap, reorder or remove gallery photos. She does that herself by dragging and tapping the photos in the editor above this chat. " +
         "kind chat: she is asking a question, following up on something earlier, saying thanks, or anything that is not a change. " +
+        "If she asks to see or view the website or a change, tell her the editor above the chat is her live website, and after she asks for a change a preview appears here in the chat with a button to open it big. " +
         "For photos and chat, write reply: a short warm answer to Jo (1-3 sentences) using the conversation so far. If she asks why something earlier did not work, explain simply and suggest how to ask again. Plain English, no file names, no technical words, never an em dash. " +
         'Reply ONLY with JSON: {"kind":"change"|"photos"|"chat","files":["..."],"reply":"..."}',
       messages: [{ role: "user", content: historyText + "Jo's latest message: " + message }]
@@ -134,7 +135,11 @@ module.exports = async (req, res) => {
         "Never retype the whole file. Keep each OLD chunk as small as uniqueness allows.\n" +
         "If the request genuinely cannot be done as a change to the words on these pages (a whole new page, the logo, colours, fonts, page layout, the booking calendar, payments), do not edit. " +
         "Instead, after your PLAN, write ===REPLY=== then a short warm explanation for Jo (1-3 sentences, plain English, no technical words, never an em dash, say it is one for Will if it needs him), then ===END===. " +
-        "A new section or notice on an existing page, like the belly bowls one, is NOT in that list: just draft it, with placeholders for anything she has not told you.",
+        "A new section or notice on an existing page, like the belly bowls one, is NOT in that list: draft it. " +
+        "Never put placeholders, square brackets, notes to Jo or made-up details (prices, dates, durations, years) on a page, visitors would see them. " +
+        "If a new section needs details Jo has not given yet (check the conversation so far), do not edit: write ===REPLY=== and ask her for them in one short friendly message that says exactly what you need, for example how long it runs, the price and when it starts, then ===END===. " +
+        "Once she has answered, draft it using exactly her details. " +
+        "Today is " + new Date().toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric", timeZone: "Europe/London" }) + ". Never write a year or date that does not come from Jo or from today.",
       messages: [{ role: "user", content: historyText + "Jo's latest message: " + message + "\n\n" +
         files.map(f => "FILE " + f + ":\n" + contents[f]).join("\n\n") }]
     });
