@@ -145,7 +145,7 @@
       around: "Recent makes (Around the Kiln page)"
     };
     var HINTS = {
-      notices: "Each photo here becomes a notice with a WhatsApp button. Start with a short title and a full stop, like: Clay club. Then the details."
+      notices: "Each photo here becomes a notice. Start with a short title and a full stop, like: Clay club. Then the details. Paste a Baluu booking link at the end and the button becomes Book now."
     };
     var CAP_MAX = { notices: 300 };
     var key = "", manifest = null, saveTimer = null, dirty = false;
@@ -504,7 +504,7 @@
                   loadPv(); ex.frame.hidden = false;
                   /* Vercel can take a few seconds more to switch the preview on:
                      load it again shortly after, and offer a manual reload too */
-                  setTimeout(loadPv, 6000);
+                  setTimeout(loadPv, 6000); setTimeout(loadPv, 15000);
                   var rl = ex.result.querySelector(".rl"); rl.hidden = false;
                   rl.addEventListener("click", loadPv);
                   ex.result.querySelector(".pv").href = pvUrl;
