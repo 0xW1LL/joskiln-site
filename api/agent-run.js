@@ -10,7 +10,7 @@ const { keyOk, notConfigured, send } = require("./_shared.js");
 const { list } = require("@vercel/blob");
 
 const DIARY_PATH = "agent/diary.txt";
-const EDITABLE = ["index.html", "whats-on.html", "baby-prints.html", "around-the-kiln.html", "find-us.html"];
+const EDITABLE = ["index.html", "whats-on.html", "baby-prints.html", "find-us.html"];
 const REPO = process.env.GITHUB_REPO || "0xW1LL/joskiln-site";
 const GH = "https://api.github.com/repos/" + REPO;
 const MODEL_BIG = process.env.AGENT_MODEL || "claude-sonnet-4-5";
@@ -88,7 +88,7 @@ module.exports = async (req, res) => {
     const smallResp = await anthropic({
       model: MODEL_SMALL, max_tokens: 400,
       system: "You are the front desk of the helper that edits Jo's pottery studio website. Pages: " + EDITABLE.join(", ") +
-        ". index.html is the homepage; whats-on.html classes, workshops and booking; baby-prints.html baby prints and belly bowls; around-the-kiln.html community and membership; find-us.html contact, opening hours and directions. " +
+        ". index.html is the homepage; whats-on.html is the Around the Kiln page: classes, workshops, booking, gift vouchers and recent makes; baby-prints.html baby prints and belly bowls; find-us.html contact, opening hours and directions. " +
         "Decide what Jo's latest message is. " +
         "kind change: she wants something on the website added, removed or reworded. This includes new sections, notices, offers, events, workshops or 'features' like the belly bowls section (a block of words, maybe with a button, added to a page). These are normal, everyday changes. Pick the 1-2 most likely pages and never ask her to clarify; the next helper reads the full pages. " +
         "kind photos: she wants to add, swap, reorder or remove gallery photos. She does that herself by dragging and tapping the photos in the editor above this chat. " +

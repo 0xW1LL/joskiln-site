@@ -1,4 +1,10 @@
 {
   "cleanUrls": true,
-  "trailingSlash": false
+  "trailingSlash": false,
+  "redirects": [
+    { "source": "/around-the-kiln", "destination": "/whats-on", "permanent": true },
+    { "source": "/around-the-kiln.html", "destination": "/whats-on", "permanent": true },
+    { "source": "/admin", "destination": "/edit", "permanent": false },
+    { "source": "/admin.html", "destination": "/edit", "permanent": false }
+  ]
 }

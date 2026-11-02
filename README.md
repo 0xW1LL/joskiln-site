@@ -9,7 +9,7 @@ step: plain HTML + one stylesheet + two small scripts. Deploys as-is to Vercel.
 index.html              Home
 whats-on.html           Classes + Baluu booking embed (#book)
 baby-prints.html        Baby prints, pricing, FAQ, enquiry form (#enquire, #voucher)
-around-the-kiln.html    Kiln Club tiers, gallery, noticeboard (#interest)
+around-the-kiln.html    RETIRED Nov 2026, redirects to /whats-on (kept as the Kiln Club copy)
 find-us.html            Map, hours, contact form
 privacy.html / 404.html
 css/style.css           Design tokens at the top; seasonal accents on html[data-season]

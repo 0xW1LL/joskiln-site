@@ -316,10 +316,55 @@
     var note = grid.parentElement && grid.parentElement.querySelector(".auto-note");
     if (note) note.textContent = "Jo keeps this gallery up to date herself, fresh from the studio";
   }
+  /* Jo's notices: each tile in her "notices" gallery becomes a card.
+     The words before the first full stop are the title, the rest the
+     details, and the button opens WhatsApp with the title filled in. */
+  function splitNotice(text) {
+    text = (text || "").trim();
+    var m = text.match(/^([^.!?]{2,70}[.!?])\s+([\s\S]+)$/);
+    if (m) return { title: m[1].replace(/\.$/, ""), body: m[2] };
+    if (text.length <= 70) return { title: text.replace(/\.$/, ""), body: "" };
+    return { title: "", body: text };
+  }
+  function noticeSlug(n, i, used) {
+    var base = "n-" + ((n.title || n.body).toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "").slice(0, 40) || String(i + 1));
+    var s = base, k = 2;
+    while (used[s]) s = base + "-" + (k++);
+    used[s] = true;
+    return s;
+  }
+  function noticeCard(t, id, linkTo) {
+    var n = splitNotice(t.caption);
+    var card = document.createElement(linkTo ? "a" : "article"); card.className = "ncard";
+    if (linkTo) { card.href = linkTo + "#" + id; card.classList.add("ncard--link"); }
+    else card.id = id;
+    var src = t.type === "video" ? t.poster : t.src;
+    if (src) {
+      var img = document.createElement("img");
+      img.src = src; img.alt = t.alt || n.title || "From the studio"; img.loading = "lazy";
+      card.appendChild(img);
+    }
+    var b = document.createElement("div"); b.className = "ncard__body";
+    if (n.title) { var h = document.createElement("h3"); h.textContent = n.title; b.appendChild(h); }
+    if (n.body) { var p = document.createElement("p"); p.textContent = n.body; b.appendChild(p); }
+    if (linkTo) {
+      var more = document.createElement("span"); more.className = "btn btn--primary ncard__btn";
+      more.textContent = "Find out more"; b.appendChild(more);
+    } else {
+      var a = document.createElement("a"); a.className = "btn btn--wa ncard__btn";
+      var ask = "Hi Jo, I'd like to ask about " + (n.title || "your notice on the website");
+      a.href = (C.whatsappUrl || "https://wa.me/447917413699") + "?text=" + encodeURIComponent(ask);
+      a.target = "_blank"; a.rel = "noopener"; a.textContent = "Ask Jo about this";
+      b.appendChild(a);
+    }
+    card.appendChild(b);
+    return card;
+  }
+  var noticeGrids = document.querySelectorAll("[data-notices]");
   var igGrid = document.querySelector("[data-ig-grid]");
   var picksGrid = document.querySelector("[data-picks]");
   var joGrids = document.querySelectorAll("[data-gallery]");
-  if (igGrid || joGrids.length) {
+  if (igGrid || joGrids.length || noticeGrids.length) {
     var getManifest = fetch("/api/gallery-list", { cache: "no-store" })
       .then(function (r) { return r.json(); })
       .then(function (d) { return d && !d.empty && d.galleries ? d.galleries : null; })
@@ -331,6 +376,29 @@
       : Promise.resolve([]);
     Promise.all([getManifest, getFeed]).then(function (res) {
       var galleries = res[0], posts = res[1];
+      var notes = galleries && galleries.notices && galleries.notices.tiles || [];
+      noticeGrids.forEach(function (grid) {
+        var max = parseInt(grid.getAttribute("data-notices"), 10) || 60;
+        if (!notes.length) return;
+        var linkTo = grid.getAttribute("data-notices-link");
+        var used = {};
+        var ids = notes.map(function (t, i) { return noticeSlug(splitNotice(t.caption), i, used); });
+        grid.innerHTML = "";
+        notes.slice(0, max).forEach(function (t, i) { grid.appendChild(noticeCard(t, ids[i], linkTo)); });
+        var sec = grid.closest("section");
+        if (sec) sec.hidden = false;
+        /* arriving from a home page card: the notice was drawn after the
+           page loaded, so scroll to it by hand and give it a glow */
+        if (!linkTo && location.hash) {
+          var target = document.getElementById(location.hash.slice(1));
+          if (target && target.classList.contains("ncard")) {
+            setTimeout(function () {
+              target.scrollIntoView({ behavior: reduced ? "auto" : "smooth", block: "center" });
+              target.classList.add("ncard--here");
+            }, 150);
+          }
+        }
+      });
       joGrids.forEach(function (grid) {
         var g = galleries && galleries[grid.getAttribute("data-gallery")];
         if (g && g.tiles && g.tiles.length) { fillTiles(grid, g.tiles); joNote(grid); }

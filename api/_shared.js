@@ -2,7 +2,7 @@
 const crypto = require("crypto");
 
 const MANIFEST_PATH = "gallery/galleries.json";
-const GALLERY_KEYS = ["fresh", "baby", "around"];
+const GALLERY_KEYS = ["fresh", "baby", "around", "notices"];
 
 /* Constant-time-ish comparison of the studio password. */
 function keyOk(sent) {
@@ -33,7 +33,7 @@ function validManifest(m) {
       if (!["image", "pair", "video"].includes(type)) return "bad tile type in " + k;
       if (typeof t.src !== "string" || !t.src) return "tile without src in " + k;
       if (type === "pair" && (typeof t.src2 !== "string" || !t.src2)) return "pair without src2 in " + k;
-      if ((t.caption || "").length > 140) return "caption too long in " + k;
+      if ((t.caption || "").length > (k === "notices" ? 300 : 140)) return "caption too long in " + k;
     }
   }
   return null;

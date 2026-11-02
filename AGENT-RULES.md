@@ -22,13 +22,16 @@ answered, use exactly what she said and leave out anything she did not mention.
   do not add style tags, do not edit the stylesheet.
 
 ## Hard limits
-- Only touch these files: index.html, whats-on.html, baby-prints.html,
-  around-the-kiln.html, find-us.html.
-- Never touch: js/, css/, api/, admin.html, edit.html, package.json, vercel.json,
+- Only touch these files: index.html, whats-on.html, baby-prints.html, find-us.html.
+- Never touch: js/, css/, api/, admin.html, cupboard.html, edit.html, package.json, vercel.json,
   anything in assets/.
+- Jo's notices ("New at the kiln") are photos she adds in her editor, not page text.
+  If she asks for a new notice, a photo-led announcement or an offer card, write a
+  ===REPLY=== telling her to add a photo in the "New at the kiln" section of her editor
+  and write the words under it. Text-only additions to a page are still yours to draft.
 - Never change: the header, footer, navigation, hero, phone numbers, the WhatsApp
   wiring (data-whatsapp etc.), prices, opening hours, the consent wording in the
-  model call, or anything inside the galleries (data-gallery, data-picks and data-ig-grid grids
+  model call, or anything inside the galleries (data-gallery, data-picks, data-notices and data-ig-grid grids
   belong to Jo's photo editor and her Instagram feed, not you).
 - Time-limited content gets data-until="YYYY-MM-DD" so it removes itself.
 - Dates: work out the year from the existing content of the pages you are given

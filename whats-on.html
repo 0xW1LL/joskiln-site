@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>What's On · classes & workshops at Jo's Kiln, Westbourne</title>
+  <title>Around the Kiln · classes, workshops & events at Jo's Kiln, Westbourne</title>
   <meta name="description" content="Workshops, events and pottery classes in Westbourne, Bournemouth. Live dates, prices and spaces. Book online in a minute.">
   <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -23,9 +23,8 @@
       </a>
       <nav class="nav-desktop" aria-label="Main">
         <a href="index.html">Home</a>
-        <a href="whats-on.html" aria-current="page">What's On</a>
+        <a href="whats-on.html" aria-current="page">Around the Kiln</a>
         <a href="baby-prints.html">Baby Prints</a>
-        <a href="around-the-kiln.html">Around the Kiln</a>
         <a href="find-us.html">Find Us</a>
       </nav>
       <a class="btn btn--primary" data-book="whats-on.html#book" href="whats-on.html#book">Book a workshop</a>
@@ -48,9 +47,8 @@
     </div>
     <nav aria-label="Mobile">
       <a href="index.html">Home</a>
-      <a href="whats-on.html" aria-current="page">What's On</a>
+      <a href="whats-on.html" aria-current="page">Around the Kiln</a>
       <a href="baby-prints.html">Baby Prints</a>
-      <a href="around-the-kiln.html">Around the Kiln</a>
       <a href="find-us.html">Find Us</a>
     </nav>
     <div class="mobile-menu__actions">
@@ -64,30 +62,12 @@
 
     <section class="page-head">
       <div class="wrap">
-        <h1>What's on at the kiln</h1>
+        <h1>Around the kiln</h1>
         <p class="lead">Every class starts the same way. An apron, a wedge of clay, and infinite fun and creativity. Pick a workshop or event, gather some friends or come alone, and book in. Prices include all materials and firing, full tuition, and tea, coffee or cold drinks, or you can even bring your own bottle.</p>
       </div>
     </section>
 
 
-
-    <section class="section" style="padding:28px 0 0">
-      <div class="wrap">
-        <!-- ============ MODEL CALL (time-limited) ============
-             data-until removes this block after that date (js/main.js).
-             Change the date to extend it, or delete the block once Jo has
-             her model. Same strip appears on the homepage.              -->
-        <div class="callout reveal" data-until="2026-11-30">
-          <div class="callout__body">
-            <p class="kicker" style="margin-bottom:6px">Looking for a pregnant mum</p>
-            <p class="callout__lead">Jo is making belly bowls, and she needs a model.</p>
-            <p style="margin:0;color:var(--ink-soft)">If you are 30 to 34 weeks pregnant and around Westbourne, come and be a model for an afternoon. You keep a handcrafted bowl of your own.</p>
-          </div>
-          <a class="btn btn--primary" href="baby-prints.html#belly-bowls">Tell me more</a>
-        </div>
-
-      </div>
-    </section>
 
     <section class="section" id="book" style="padding-top:10px">
       <div class="wrap">
@@ -105,8 +85,41 @@
           </div>
           <p class="mt-2" style="color:var(--ink-soft)">Rather not book online? <a data-whatsapp href="#" style="font-weight:800">Send Jo a WhatsApp</a> and she'll pop your name down. No card needed for waiting lists.</p>
         </div>
+      </div>
+    </section>
 
-        <div class="row-between mt-3 reveal">
+    <!-- ================= NEW AT THE KILN =================
+         Jo's notices, filled from the "New at the kiln" section of her
+         editor (js/main.js). Hidden until she has added at least one. -->
+    <section class="section section--alt" id="new" hidden>
+      <div class="wrap reveal">
+        <p class="kicker">New at the kiln</p>
+        <h2>Groups, clubs and something new</h2>
+        <p class="lead">Send Jo a WhatsApp to ask about any of these.</p>
+        <div class="notices mt-2" data-notices></div>
+      </div>
+    </section>
+
+    <!-- ================= RECENT MAKES (was Around the Kiln) ================= -->
+    <section class="section" id="makes">
+      <div class="wrap">
+        <h2 class="reveal">Fresh off the shelf</h2>
+        <p class="lead reveal">Recently out of the kiln, made at workshops and in the studio.</p>
+        <div class="pgrid mt-2 reveal" data-gallery="around">
+          <figure><img src="assets/img/snowman-sculpting.jpg" alt="Hands wrapping a clay scarf around a snowman" loading="lazy"><figcaption>A snowman gets his scarf</figcaption></figure>
+          <figure><img src="assets/img/hare-sculpture.jpg" alt="Life-size clay hare sitting upright" loading="lazy"><figcaption>The hare, before his ears set</figcaption></figure>
+          <figure><img src="assets/img/hare-workshop.jpg" alt="A large clay hare resting on the workshop table" loading="lazy"><figcaption>Big pieces on the big table</figcaption></figure>
+          <figure><img class="no-crop" src="assets/img/hare-moon-painted.jpg" alt="Painted hare sitting on a ceramic moon" loading="lazy"><figcaption>The hare and the moon, painted</figcaption></figure>
+          <figure><img src="assets/img/couple-hands-cast.jpg" alt="Cast of two adult hands entwined, one wearing a ring" loading="lazy"><figcaption>Two hands, one cast</figcaption></figure>
+          <figure><img src="assets/img/hare-shop-window.jpg" alt="Large finished clay hare lying in the shop window" loading="lazy"><figcaption>The hare, finished and in the window</figcaption></figure>
+        </div>
+        <span class="auto-note">Jo keeps this gallery up to date herself, fresh from the studio</span>
+      </div>
+    </section>
+
+    <section class="section" style="padding-top:0">
+      <div class="wrap">
+        <div class="row-between reveal">
           <h2 style="max-width:560px">Gift vouchers are available for use on any service provided at Jo's Kiln.</h2>
           <a class="btn btn--ghost" data-voucher href="baby-prints.html#voucher">Gift a voucher</a>
         </div>

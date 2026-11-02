@@ -41,6 +41,8 @@
       font-weight: 800; padding: 5px 10px; border-radius: 14px; cursor: pointer; }
     .tt .grab { cursor: grab; touch-action: none; letter-spacing: 1px; }
     .tt .rm { background: rgba(140,20,30,.85); }
+    .tt .mv { pointer-events: auto; border: 0; background: rgba(0,0,0,.72); color: #fff; font: inherit; font-size: .78rem;
+      font-weight: 800; padding: 5px 8px; border-radius: 14px; cursor: pointer; margin-left: 6px; max-width: 92px; }
     figcaption[contenteditable] { cursor: text; }
     figcaption[contenteditable]:focus { outline: 2px solid var(--accent); background: #fff; }
     figcaption .pen { color: var(--accent); font-size: .9em; margin-left: 6px; }
@@ -109,7 +111,7 @@
     <div class="ed-banner">
       <b>You are editing the website</b>
       <span class="st" id="ed-status">Ready</span>
-      <a href="admin.html">old cupboard</a>
+      <a href="cupboard.html">old cupboard</a>
     </div>
 
     <main id="sections" class="wrap" style="padding-top:26px"></main>
@@ -132,7 +134,16 @@
   (function () {
     "use strict";
     var KEY_STORE = "jk_admin_key";
-    var TITLES = { fresh: "Jo's picks (home page, under the Instagram photos)", baby: "Baby prints", around: "Around the kiln" };
+    var TITLES = {
+      notices: "New at the kiln (your notices: the first three also show on the home page)",
+      fresh: "Jo's picks (home page, under the Instagram photos)",
+      baby: "Baby prints",
+      around: "Recent makes (Around the Kiln page)"
+    };
+    var HINTS = {
+      notices: "Each photo here becomes a notice with a WhatsApp button. Start with a short title and a full stop, like: Clay club. Then the details."
+    };
+    var CAP_MAX = { notices: 300 };
     var key = "", manifest = null, saveTimer = null, dirty = false;
     var $ = function (id) { return document.getElementById(id); };
 
@@ -164,7 +175,7 @@
       status("Fetching the site…");
       fetch("/api/gallery-list", { cache: "no-store" }).then(function (r) { return r.json(); }).then(function (d) {
         if (!d || !d.galleries) {
-          $("sections").innerHTML = '<p style="padding:30px 0">Nothing here yet. Open the <a href="admin.html">cupboard</a> once to load the starter photos.</p>';
+          $("sections").innerHTML = '<p style="padding:30px 0">Nothing here yet. Open the <a href="cupboard.html">cupboard</a> once to load the starter photos.</p>';
           status("Ready"); return;
         }
         manifest = d; render(); status("Ready");
@@ -190,8 +201,9 @@
         var sec = document.createElement("section"); sec.className = "ed-section"; sec.style.marginBottom = "44px";
         var h = document.createElement("h2"); h.textContent = TITLES[gk]; sec.appendChild(h);
         var hint = document.createElement("p"); hint.className = "ed-hint";
-        hint.textContent = "Hold ⠿ to drag a photo somewhere else. Tap the words to change them.";
+        hint.textContent = (HINTS[gk] ? HINTS[gk] + " " : "") + "Hold ⠿ to drag a photo. Tap the words to change them. Move sends a photo to another section.";
         sec.appendChild(hint);
+        if (!manifest.galleries[gk]) manifest.galleries[gk] = { tiles: [] };
         var grid = document.createElement("div"); grid.className = "pgrid"; grid.dataset.g = gk;
         (manifest.galleries[gk] ? manifest.galleries[gk].tiles : []).forEach(function (t, i) {
           grid.appendChild(tileEl(gk, t, i));
@@ -217,6 +229,22 @@
         swap.addEventListener("click", function () { addPhoto(gk, i); });
         right.appendChild(swap);
       }
+      var mv = document.createElement("select"); mv.className = "mv"; mv.title = "Move to another section";
+      var o0 = document.createElement("option"); o0.value = ""; o0.textContent = "Move"; mv.appendChild(o0);
+      Object.keys(TITLES).forEach(function (k) {
+        if (k === gk) return;
+        var o = document.createElement("option"); o.value = k; o.textContent = "to " + TITLES[k].split(" (")[0]; mv.appendChild(o);
+      });
+      mv.addEventListener("change", function () {
+        var to = mv.value; if (!to) return;
+        var moved = manifest.galleries[gk].tiles.splice(i, 1)[0];
+        if (!manifest.galleries[to]) manifest.galleries[to] = { tiles: [] };
+        manifest.galleries[to].tiles.push(moved);
+        render(); scheduleSave();
+        var dest = document.querySelector('.pgrid[data-g="' + to + '"]');
+        if (dest) dest.scrollIntoView({ behavior: "smooth", block: "center" });
+      });
+      right.appendChild(mv);
       var rm = document.createElement("button"); rm.className = "rm"; rm.textContent = "✕"; rm.title = "Take off the website";
       rm.style.marginLeft = "6px";
       rm.addEventListener("click", function () {
@@ -235,11 +263,11 @@
         fig.appendChild(mediaFor(t));
       }
       var cap = document.createElement("figcaption");
-      cap.textContent = t.caption || "Tap to write a line about this piece";
+      cap.textContent = t.caption || (gk === "notices" ? "Tap to write: a short title, a full stop, then the details" : "Tap to write a line about this piece");
       cap.setAttribute("contenteditable", "true");
       var pen = document.createElement("span"); pen.className = "pen"; pen.textContent = "✎"; cap.appendChild(pen);
       cap.addEventListener("blur", function () {
-        var txt = cap.textContent.replace("✎", "").trim().slice(0, 140);
+        var txt = cap.textContent.replace("✎", "").trim().slice(0, CAP_MAX[gk] || 140);
         t.caption = txt; scheduleSave();
       });
       cap.addEventListener("keydown", function (e) { if (e.key === "Enter") { e.preventDefault(); cap.blur(); } });
