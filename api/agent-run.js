@@ -245,9 +245,13 @@ module.exports = async (req, res) => {
     /* the preview takes Vercel a little while to build; wait for it so the
        page Jo sees is never a 404 */
     emit({ stage: "Firing the preview…" });
-    for (let i = 0; i < 14; i++) {
+    /* ready means a real 200 page from the new build, not a redirect or
+       Vercel's "not found" page (those refuse to show inside the editor) */
+    for (let i = 0; i < 24; i++) {
       if (closed) return res.end();
-      const ready = await fetch(previewUrl, { redirect: "manual" }).then(r => r.status < 400).catch(() => false);
+      const ready = await fetch(previewUrl + "/?ready=" + Date.now(), { redirect: "manual", cache: "no-store" })
+        .then(async r => r.status === 200 && (await r.text()).indexOf("</html>") !== -1)
+        .catch(() => false);
       if (ready) break;
       await new Promise(r => setTimeout(r, 5000));
     }
