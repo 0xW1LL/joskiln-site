@@ -70,7 +70,11 @@
     .agent-log { max-width: 900px; margin: 0 auto; max-height: 58vh; overflow-y: auto; }
     .agent-log:not(:empty) { margin-bottom: 8px; }
     .ax { margin-bottom: 10px; }
-    .ax-you { text-align: right; font-size: .9rem; color: var(--ink-soft); font-style: italic; margin-bottom: 4px; }
+    .ax-you { display: flex; justify-content: flex-end; margin-bottom: 8px; }
+    .ax-you span { max-width: 80%; background: var(--accent); color: #fff; padding: 10px 14px;
+      border-radius: 18px 18px 4px 18px; font-size: .95rem; line-height: 1.4; white-space: pre-wrap; text-align: left; }
+    .ax-card.ax-card { border-radius: 18px 18px 18px 4px; }
+    .agent-result .rl { background: none; color: var(--ink-soft); text-decoration: underline; padding: 10px 6px; }
     .ax-card { background: var(--bg-alt); border-radius: 14px; padding: 12px 14px; }
     .agent-head { display: flex; align-items: center; gap: 10px; font-weight: 800; }
     .agent-stage { color: var(--ink-soft); font-weight: 400; }
@@ -392,7 +396,8 @@
       unmin();
       var log = $("agent-log");
       var ax = document.createElement("div"); ax.className = "ax";
-      var you = document.createElement("div"); you.className = "ax-you"; you.textContent = "\u201C" + msg + "\u201D";
+      var you = document.createElement("div"); you.className = "ax-you";
+      var bub = document.createElement("span"); bub.textContent = msg; you.appendChild(bub);
       var card = document.createElement("div"); card.className = "ax-card busy";
       card.innerHTML = '<div class="agent-head">' + KILN_SVG +
         '<span class="agent-stage busy">Rolling up sleeves…</span></div>' +
@@ -402,7 +407,8 @@
         '<div class="agent-result" hidden>' +
         '<button class="go ap">Yes, put it live</button>' +
         '<a class="ghosty pv" target="_blank" rel="noopener">Open the preview big</a>' +
-        '<button class="bin bn">Bin it</button></div>' +
+        '<button class="bin bn">Bin it</button>' +
+        '<button class="rl" hidden>Preview blank? Reload it</button></div>' +
         '<div class="agent-err" hidden></div>';
       ax.appendChild(you); ax.appendChild(card); log.appendChild(ax);
       log.scrollTop = log.scrollHeight;
@@ -493,8 +499,15 @@
                 ex.summary.hidden = false; ex.summary.textContent = ev.summary || "Change drafted.";
                 note(ex, "Drafted a preview: " + (ev.summary || "a change") + " (waiting for Jo to put it live or bin it)");
                 if (ev.previewUrl) {
-                  ex.frame.src = ev.previewUrl; ex.frame.hidden = false;
-                  ex.result.querySelector(".pv").href = ev.previewUrl;
+                  var pvUrl = ev.previewUrl;
+                  var loadPv = function () { ex.frame.src = pvUrl + (pvUrl.indexOf("?") === -1 ? "?" : "&") + "v=" + Date.now(); };
+                  loadPv(); ex.frame.hidden = false;
+                  /* Vercel can take a few seconds more to switch the preview on:
+                     load it again shortly after, and offer a manual reload too */
+                  setTimeout(loadPv, 6000);
+                  var rl = ex.result.querySelector(".rl"); rl.hidden = false;
+                  rl.addEventListener("click", loadPv);
+                  ex.result.querySelector(".pv").href = pvUrl;
                 } else ex.result.querySelector(".pv").href = ev.prUrl || "#";
                 ex.result.hidden = false;
                 unmin();
