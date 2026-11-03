@@ -339,16 +339,50 @@
     used[s] = true;
     return s;
   }
+  /* Several photos can make one notice: a photo with no words, or the
+     same words as the notice before it, joins that notice (unless it is
+     marked start, the first photo of a batch Jo picked together). */
+  function groupNotices(tiles) {
+    var groups = [];
+    tiles.forEach(function (t) {
+      var cap = (t.caption || "").trim();
+      var last = groups[groups.length - 1];
+      var src = t.type === "video" ? t.poster : t.src;
+      if (last && !t.start && (!cap || cap === last.caption)) {
+        if (src) last.srcs.push(src);
+      } else {
+        groups.push({ caption: cap, alt: t.alt, srcs: src ? [src] : [] });
+      }
+    });
+    return groups;
+  }
   function noticeCard(t, id, linkTo) {
     var n = splitNotice(t.caption);
     var card = document.createElement(linkTo ? "a" : "article"); card.className = "ncard";
     if (linkTo) { card.href = linkTo + "#" + id; card.classList.add("ncard--link"); }
     else card.id = id;
-    var src = t.type === "video" ? t.poster : t.src;
-    if (src) {
-      var img = document.createElement("img");
-      img.src = src; img.alt = t.alt || n.title || "From the studio"; img.loading = "lazy";
-      card.appendChild(img);
+    if (t.srcs.length) {
+      var media = document.createElement("div"); media.className = "ncard__media";
+      t.srcs.forEach(function (s, i) {
+        var img = document.createElement("img");
+        img.src = s; img.alt = i ? "" : (t.alt || n.title || "From the studio"); img.loading = "lazy";
+        if (i === 0) img.className = "is-on";
+        media.appendChild(img);
+      });
+      if (t.srcs.length > 1) {
+        var dots = document.createElement("div"); dots.className = "ncard__dots";
+        t.srcs.forEach(function (s, i) { var d = document.createElement("i"); if (i === 0) d.className = "is-on"; dots.appendChild(d); });
+        media.appendChild(dots);
+        if (!reduced) {
+          var k = 0, ims = media.querySelectorAll("img"), ds = dots.querySelectorAll("i");
+          setInterval(function () {
+            ims[k].classList.remove("is-on"); ds[k].classList.remove("is-on");
+            k = (k + 1) % ims.length;
+            ims[k].classList.add("is-on"); ds[k].classList.add("is-on");
+          }, 3500);
+        }
+      }
+      card.appendChild(media);
     }
     var b = document.createElement("div"); b.className = "ncard__body";
     if (n.title) { var h = document.createElement("h3"); h.textContent = n.title; b.appendChild(h); }
@@ -392,12 +426,18 @@
       var notes = galleries && galleries.notices && galleries.notices.tiles || [];
       noticeGrids.forEach(function (grid) {
         var max = parseInt(grid.getAttribute("data-notices"), 10) || 60;
-        if (!notes.length) return;
+        var groups = groupNotices(notes);
+        if (!groups.length) return;
         var linkTo = grid.getAttribute("data-notices-link");
         var used = {};
-        var ids = notes.map(function (t, i) { return noticeSlug(splitNotice(t.caption), i, used); });
+        var ids = groups.map(function (g, i) { return noticeSlug(splitNotice(g.caption), i, used); });
+        var shown = groups.slice(0, max);
         grid.innerHTML = "";
-        notes.slice(0, max).forEach(function (t, i) { grid.appendChild(noticeCard(t, ids[i], linkTo)); });
+        /* the row sizes itself: one notice is a wide banner, two are halves,
+           three or more sit three across (four as two by two) */
+        var n = shown.length;
+        grid.classList.add("notices--" + (n === 1 ? 1 : (n === 2 || n === 4) ? 2 : 3));
+        shown.forEach(function (g, i) { grid.appendChild(noticeCard(g, ids[i], linkTo)); });
         var sec = grid.closest("section");
         if (sec) sec.hidden = false;
         /* arriving from a home page card: the notice was drawn after the
