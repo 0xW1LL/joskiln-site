@@ -34,6 +34,8 @@
     .ed-hint { color: var(--ink-soft); margin-bottom: 16px; }
     .pgrid figure { position: relative; border-radius: 10px; }
     .pgrid figure.ed-tile { outline: 2px dashed var(--accent); outline-offset: 3px; }
+    .pgrid figure.ed-tile.joins { outline-style: dotted; opacity: .9; }
+    .pgrid figure.ed-tile.joins figcaption { font-style: italic; color: var(--ink-soft); }
     .pgrid figure.dragging { opacity: .35; }
     .pgrid figure.drop-here { outline: 3px solid var(--accent); outline-offset: 3px; }
     .tt { position: absolute; top: 6px; left: 6px; right: 6px; display: flex; justify-content: space-between; z-index: 5; pointer-events: none; }
@@ -121,7 +123,7 @@
     <main id="sections" class="wrap" style="padding-top:26px"></main>
   </div>
 
-  <input type="file" id="pick-photo" accept="image/*" hidden>
+  <input type="file" id="pick-photo" accept="image/*" multiple hidden>
 
   <!-- ================= AGENT ================= -->
   <div class="agent-wrap" id="agent" hidden>
@@ -145,7 +147,7 @@
       around: "Recent makes (Around the Kiln page)"
     };
     var HINTS = {
-      notices: "Each photo here becomes a notice. Start with a short title and a full stop, like: Clay club. Then the details. Paste a Baluu booking link at the end and the button becomes Book now."
+      notices: "Each notice is a photo with words: a short title, a full stop, then the details. For more than one photo, pick several at once. Paste a Baluu link at the end of the words for a Book now button."
     };
     var CAP_MAX = { notices: 300 };
     var key = "", manifest = null, saveTimer = null, dirty = false;
@@ -267,7 +269,10 @@
         fig.appendChild(mediaFor(t));
       }
       var cap = document.createElement("figcaption");
-      cap.textContent = t.caption || (gk === "notices" ? "Tap to write: a short title, a full stop, then the details" : "Tap to write a line about this piece");
+      var joins = gk === "notices" && i > 0 && !t.start && !(t.caption || "").trim();
+      cap.textContent = t.caption || (joins ? "No words, so this photo joins the notice before it. Tap to start a new notice instead."
+        : gk === "notices" ? "Tap to write: a short title, a full stop, then the details" : "Tap to write a line about this piece");
+      if (joins) fig.classList.add("joins");
       cap.setAttribute("contenteditable", "true");
       var pen = document.createElement("span"); pen.className = "pen"; pen.textContent = "✎"; cap.appendChild(pen);
       cap.addEventListener("blur", function () {
@@ -326,35 +331,54 @@
       pickTarget = { gk: gk, i: (replaceIndex === undefined ? null : replaceIndex) };
       $("pick-photo").click();
     }
+    /* shrink one photo on the phone, upload it, hand back its address */
+    function shrinkAndUpload(file) {
+      return new Promise(function (resolve, reject) {
+        var img = new Image(); var url = URL.createObjectURL(file);
+        img.onload = function () {
+          var MAX = 1600, s = Math.min(1, MAX / Math.max(img.width, img.height));
+          var cv = document.createElement("canvas");
+          cv.width = Math.round(img.width * s); cv.height = Math.round(img.height * s);
+          cv.getContext("2d").drawImage(img, 0, 0, cv.width, cv.height);
+          URL.revokeObjectURL(url);
+          cv.toBlob(function (blob) {
+            var fr = new FileReader();
+            fr.onload = function () {
+              post("/api/gallery-upload", { key: key, filename: file.name, contentType: "image/jpeg", data: String(fr.result).split(",")[1] })
+                .then(function (r) { if (r.ok) resolve(r.data.url); else reject(new Error(r.data.error || "Upload failed.")); })
+                .catch(function () { reject(new Error("Upload failed. Try again.")); });
+            };
+            fr.readAsDataURL(blob);
+          }, "image/jpeg", 0.82);
+        };
+        img.onerror = function () { URL.revokeObjectURL(url); reject(new Error("That photo would not open.")); };
+        img.src = url;
+      });
+    }
     $("pick-photo").addEventListener("change", function () {
-      var file = this.files && this.files[0]; this.value = "";
-      if (!file || !pickTarget) return;
-      status("Shrinking the photo…");
-      var img = new Image(); var url = URL.createObjectURL(file);
-      img.onload = function () {
-        var MAX = 1600, s = Math.min(1, MAX / Math.max(img.width, img.height));
-        var cv = document.createElement("canvas");
-        cv.width = Math.round(img.width * s); cv.height = Math.round(img.height * s);
-        cv.getContext("2d").drawImage(img, 0, 0, cv.width, cv.height);
-        URL.revokeObjectURL(url);
-        cv.toBlob(function (blob) {
-          var fr = new FileReader();
-          fr.onload = function () {
-            status("Uploading…");
-            post("/api/gallery-upload", { key: key, filename: file.name, contentType: "image/jpeg", data: String(fr.result).split(",")[1] })
-              .then(function (r) {
-                if (!r.ok) return status(r.data.error || "Upload failed.", "warn");
-                var arr = manifest.galleries[pickTarget.gk].tiles;
-                if (pickTarget.i === null) arr.push({ type: "image", src: r.data.url, caption: "" });
-                else { arr[pickTarget.i].src = r.data.url; arr[pickTarget.i].type = "image"; delete arr[pickTarget.i].src2; }
-                render(); scheduleSave();
-              }).catch(function () { status("Upload failed. Try again.", "warn"); });
-          };
-          fr.readAsDataURL(blob);
-        }, "image/jpeg", 0.82);
-      };
-      img.onerror = function () { URL.revokeObjectURL(url); status("That photo would not open.", "warn"); };
-      img.src = url;
+      var files = Array.prototype.slice.call(this.files || []); this.value = "";
+      if (!files.length || !pickTarget) return;
+      var target = pickTarget;
+      if (target.i !== null) files = files.slice(0, 1);   /* Swap replaces one photo */
+      var arr = manifest.galleries[target.gk].tiles;
+      var done = 0, first = true;
+      function next() {
+        if (!files.length) return;   /* the save itself reports "Saved" */
+        var file = files.shift();
+        status("Uploading photo " + (done + 1) + "…");
+        shrinkAndUpload(file).then(function (u) {
+          if (target.i !== null) { arr[target.i].src = u; arr[target.i].type = "image"; delete arr[target.i].src2; }
+          else {
+            var tile = { type: "image", src: u, caption: "" };
+            /* several photos picked together for a notice make one notice */
+            if (target.gk === "notices" && first && files.length) tile.start = true;
+            arr.push(tile);
+          }
+          first = false; done++;
+          render(); scheduleSave(); next();
+        }).catch(function (e) { status(e.message, "warn"); });
+      }
+      next();
     });
 
     /* ---------- save ---------- */
