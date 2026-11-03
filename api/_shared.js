@@ -19,6 +19,8 @@ function notConfigured() {
   return !process.env.ADMIN_KEY;
 }
 
+function t_bad(tiles) { return tiles.some(function (t) { return t && t.start !== undefined && typeof t.start !== "boolean"; }); }
+
 /* Loose schema check so a buggy client can't wreck the manifest. */
 function validManifest(m) {
   if (!m || typeof m !== "object" || !m.galleries) return "no galleries object";
@@ -27,6 +29,7 @@ function validManifest(m) {
     const tiles = m.galleries[k].tiles;
     if (!Array.isArray(tiles)) return k + " has no tiles array";
     if (tiles.length > 60) return k + " has too many tiles";
+    if (t_bad(tiles)) return "bad start flag in " + k;
     for (const t of tiles) {
       if (!t || typeof t !== "object") return "bad tile in " + k;
       const type = t.type || "image";
